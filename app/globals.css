@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: #fefaf8; }
+::-webkit-scrollbar-thumb { background: #f5d5de; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #e8a0b4; }
+
+/* Smooth scroll */
+html { scroll-behavior: smooth; }
+
+/* Editable cells */
+.editable-cell {
+  border: 1px dashed #f5d5de;
+  border-radius: 6px;
+  padding: 4px 8px;
+  min-width: 80px;
+  display: inline-block;
+  background: #fffbf9;
+  outline: none;
+  font-size: 13px;
+  color: #6b4f4f;
+}
+
+.editable-cell:focus {
+  border-color: #e8a0b4;
+}
