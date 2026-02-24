@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SectionHeader from './ui/SectionHeader'
 import FadeInView from './ui/FadeInView'
+import { createClient } from '@/lib/supabase/client'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -34,11 +35,10 @@ const defaultData = (): DayData => ({
   reflection:   '',
 })
 
-const toKey     = (d: Date)    => d.toISOString().split('T')[0]
-const addDays   = (d: Date, n: number) => { const nd = new Date(d); nd.setDate(nd.getDate() + n); return nd }
-const isToday   = (d: Date)    => toKey(d) === toKey(new Date())
-const fmtDate   = (d: Date)    => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
-const LS_PREFIX = 'glow-planner-daily-'
+const toKey   = (d: Date) => d.toISOString().split('T')[0]
+const addDays = (d: Date, n: number) => { const nd = new Date(d); nd.setDate(nd.getDate() + n); return nd }
+const isToday = (d: Date) => toKey(d) === toKey(new Date())
+const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
 // ─── Sub-components ──────────────────────────────────────────────────────────
 
@@ -184,26 +184,63 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DailyPlanner() {
-  const [date,      setDate]      = useState<Date>(new Date())
-  const [data,      setData]      = useState<DayData>(defaultData())
-  const [hydrated,  setHydrated]  = useState(false)
-  const [savedMsg,  setSavedMsg]  = useState(false)
+  const supabase   = createClient()
+  const [date,     setDate]     = useState<Date>(new Date())
+  const [data,     setData]     = useState<DayData>(defaultData())
+  const [loading,  setLoading]  = useState(true)
+  const [savedMsg, setSavedMsg] = useState(false)
+  const saveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const isFirstLoad = useRef(true)
 
-  // Load from localStorage on mount + when date changes
+  // Load from Supabase when date changes
   useEffect(() => {
-    setHydrated(true)
-    const raw = localStorage.getItem(LS_PREFIX + toKey(date))
-    setData(raw ? JSON.parse(raw) : defaultData())
-  }, [date])
+    let cancelled = false
+    setLoading(true)
+    isFirstLoad.current = true
 
-  // Save to localStorage whenever data changes (after hydration)
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || cancelled) return
+
+      const { data: row } = await supabase
+        .from('daily_plans')
+        .select('data')
+        .eq('user_id', user.id)
+        .eq('date', toKey(date))
+        .maybeSingle()
+
+      if (!cancelled) {
+        setData(row?.data ?? defaultData())
+        setLoading(false)
+        // Allow saves only after load settles
+        setTimeout(() => { isFirstLoad.current = false }, 0)
+      }
+    }
+
+    load()
+    return () => { cancelled = true }
+  }, [date]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Save to Supabase whenever data changes (debounced, skip initial load)
   useEffect(() => {
-    if (!hydrated) return
-    localStorage.setItem(LS_PREFIX + toKey(date), JSON.stringify(data))
-    setSavedMsg(true)
-    const t = setTimeout(() => setSavedMsg(false), 1800)
-    return () => clearTimeout(t)
-  }, [data, hydrated, date])
+    if (loading || isFirstLoad.current) return
+
+    if (saveTimer.current) clearTimeout(saveTimer.current)
+    saveTimer.current = setTimeout(async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+
+      await supabase.from('daily_plans').upsert(
+        { user_id: user.id, date: toKey(date), data, updated_at: new Date().toISOString() },
+        { onConflict: 'user_id,date' },
+      )
+
+      setSavedMsg(true)
+      setTimeout(() => setSavedMsg(false), 1800)
+    }, 600)
+
+    return () => { if (saveTimer.current) clearTimeout(saveTimer.current) }
+  }, [data]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const update = useCallback(<K extends keyof DayData>(key: K, value: DayData[K]) => {
     setData((prev) => ({ ...prev, [key]: value }))

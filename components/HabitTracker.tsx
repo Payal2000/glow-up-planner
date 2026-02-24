@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import SectionHeader from './ui/SectionHeader'
 import FadeInView from './ui/FadeInView'
+import { createClient } from '@/lib/supabase/client'
 
 const habits = [
   '🏋️ Morning Workout (fasted)',
@@ -19,22 +20,52 @@ const habits = [
 ]
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-const LS_KEY = 'glow-planner-habits'
+
+// Monday of the current week as YYYY-MM-DD
+function getWeekStart(): string {
+  const now = new Date()
+  const day = now.getDay() // 0 = Sun
+  const monday = new Date(now)
+  monday.setDate(now.getDate() - ((day + 6) % 7))
+  return monday.toISOString().split('T')[0]
+}
 
 export default function HabitTracker() {
+  const supabase  = createClient()
+  const weekStart = getWeekStart()
   const [filled, setFilled] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
-    const raw = localStorage.getItem(LS_KEY)
-    if (raw) setFilled(JSON.parse(raw))
-  }, [])
+    let cancelled = false
+    async function load() {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user || cancelled) return
 
-  const toggle = (key: string) =>
-    setFilled((prev) => {
-      const next = { ...prev, [key]: !prev[key] }
-      localStorage.setItem(LS_KEY, JSON.stringify(next))
-      return next
-    })
+      const { data: row } = await supabase
+        .from('habit_weeks')
+        .select('filled')
+        .eq('user_id', user.id)
+        .eq('week_start', weekStart)
+        .maybeSingle()
+
+      if (!cancelled) setFilled(row?.filled ?? {})
+    }
+    load()
+    return () => { cancelled = true }
+  }, [weekStart]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const toggle = async (key: string) => {
+    const next = { ...filled, [key]: !filled[key] }
+    setFilled(next) // optimistic update
+
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    await supabase.from('habit_weeks').upsert(
+      { user_id: user.id, week_start: weekStart, filled: next, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,week_start' },
+    )
+  }
 
   return (
     <section className="max-w-[1100px] mx-auto px-6 py-20" id="habits">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import AuthButton from './AuthButton'
 
 const links = [
   { href: '#timetable', label: 'Timetable' },
@@ -47,32 +48,35 @@ export default function Nav() {
 
   return (
     <nav
-      className="sticky top-0 z-50 flex gap-2 flex-wrap justify-center px-6 py-3.5 overflow-x-auto"
+      className="sticky top-0 z-50 flex gap-2 flex-wrap items-center justify-between px-6 py-3.5 overflow-x-auto"
       style={{
         background: 'rgba(254,250,248,0.85)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(232,160,180,0.15)',
       }}
     >
-      {links.map(({ href, label }) => {
-        const isActive = active === href.slice(1)
-        return (
-          <motion.a
-            key={href}
-            href={href}
-            onClick={(e) => handleClick(e, href)}
-            className="text-[12px] font-medium tracking-[1px] uppercase no-underline px-[18px] py-2 rounded-full whitespace-nowrap transition-colors duration-300"
-            style={{
-              color: isActive ? '#3d2b2b' : '#9c7e7e',
-              background: isActive ? '#f5d5de' : 'transparent',
-            }}
-            whileHover={{ backgroundColor: '#f5d5de', color: '#3d2b2b' }}
-            transition={{ duration: 0.2 }}
-          >
-            {label}
-          </motion.a>
-        )
-      })}
+      <div className="flex gap-2 flex-wrap items-center">
+        {links.map(({ href, label }) => {
+          const isActive = active === href.slice(1)
+          return (
+            <motion.a
+              key={href}
+              href={href}
+              onClick={(e) => handleClick(e, href)}
+              className="text-[12px] font-medium tracking-[1px] uppercase no-underline px-[18px] py-2 rounded-full whitespace-nowrap transition-colors duration-300"
+              style={{
+                color: isActive ? '#3d2b2b' : '#9c7e7e',
+                background: isActive ? '#f5d5de' : 'transparent',
+              }}
+              whileHover={{ backgroundColor: '#f5d5de', color: '#3d2b2b' }}
+              transition={{ duration: 0.2 }}
+            >
+              {label}
+            </motion.a>
+          )
+        })}
+      </div>
+      <AuthButton />
     </nav>
   )
 }
