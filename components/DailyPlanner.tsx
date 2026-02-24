@@ -80,9 +80,9 @@ function Checkbox({ checked, onToggle }: { checked: boolean; onToggle: () => voi
 }
 
 function TextInput({
-  value, onChange, placeholder, className = '', strikethrough = false,
+  value, onChange, onEnter, placeholder, className = '', strikethrough = false,
 }: {
-  value: string; onChange: (v: string) => void; placeholder: string;
+  value: string; onChange: (v: string) => void; onEnter?: () => void; placeholder: string;
   className?: string; strikethrough?: boolean;
 }) {
   return (
@@ -90,6 +90,7 @@ function TextInput({
       type="text"
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onKeyDown={(e) => { if (e.key === 'Enter' && onEnter) onEnter() }}
       placeholder={placeholder}
       className={`flex-1 min-w-0 bg-transparent outline-none text-[14px] placeholder:text-ink-faint border-b border-transparent focus:border-petal-light transition-colors ${strikethrough ? 'line-through text-ink-faint' : 'text-ink-mid'} ${className}`}
     />
@@ -125,7 +126,7 @@ function ProgressBar({ done, total }: { done: number; total: number }) {
         />
       </div>
       <span className="text-[12px] font-semibold text-petal-deep whitespace-nowrap">
-        {done}/{total} done
+        {done}/{total} done · {pct}%
       </span>
     </div>
   )
@@ -146,6 +147,37 @@ function SavedBadge({ show }: { show: boolean }) {
         </motion.span>
       )}
     </AnimatePresence>
+  )
+}
+
+function AddRowButton({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="flex items-center gap-1.5 text-[12px] text-petal-deep hover:text-petal font-semibold mt-2 transition-colors group"
+      whileTap={{ scale: 0.95 }}
+    >
+      <span className="w-4 h-4 rounded-full border-[1.5px] border-petal-deep group-hover:border-petal flex items-center justify-center text-[10px] transition-colors">
+        +
+      </span>
+      {label}
+    </motion.button>
+  )
+}
+
+function RemoveButton({ onClick }: { onClick: () => void }) {
+  return (
+    <motion.button
+      onClick={onClick}
+      className="w-4 h-4 flex-shrink-0 flex items-center justify-center text-ink-faint hover:text-petal-deep transition-colors rounded"
+      whileTap={{ scale: 0.85 }}
+      aria-label="Remove"
+      title="Remove"
+    >
+      <svg viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" className="w-3 h-3">
+        <path d="M2 7h10" />
+      </svg>
+    </motion.button>
   )
 }
 
@@ -187,10 +219,40 @@ export default function DailyPlanner() {
     }, []
   )
 
+  const addCheckItem = useCallback((key: 'priorities' | 'leetcode' | 'outreach') => {
+    setData((prev) => ({
+      ...prev,
+      [key]: [...prev[key], { text: '', done: false }],
+    }))
+  }, [])
+
+  const removeCheckItem = useCallback((key: 'priorities' | 'leetcode' | 'outreach', i: number) => {
+    setData((prev) => {
+      const arr = [...prev[key]] as CheckItem[]
+      arr.splice(i, 1)
+      return { ...prev, [key]: arr }
+    })
+  }, [])
+
   const updateApp = useCallback((i: number, field: keyof AppItem, val: string | boolean) => {
     setData((prev) => {
       const arr = [...prev.applications] as AppItem[]
       arr[i] = { ...arr[i], [field]: val }
+      return { ...prev, applications: arr }
+    })
+  }, [])
+
+  const addApp = useCallback(() => {
+    setData((prev) => ({
+      ...prev,
+      applications: [...prev.applications, { company: '', role: '', done: false }],
+    }))
+  }, [])
+
+  const removeApp = useCallback((i: number) => {
+    setData((prev) => {
+      const arr = [...prev.applications]
+      arr.splice(i, 1)
       return { ...prev, applications: arr }
     })
   }, [])
@@ -204,7 +266,9 @@ export default function DailyPlanner() {
   // Progress
   const allCheckable = [...data.priorities, ...data.leetcode, ...data.outreach, ...data.applications]
   const doneCount    = allCheckable.filter((i) => i.done).length
-  const totalCount   = allCheckable.length
+  const totalCount   = allCheckable.filter((i) =>
+    'text' in i ? i.text.trim() !== '' : (i.company.trim() !== '' || i.role.trim() !== '')
+  ).length
 
   return (
     <section className="max-w-[1100px] mx-auto px-6 py-20" id="daily">
@@ -293,41 +357,71 @@ export default function DailyPlanner() {
                   placeholder="What's your focus for today?"
                 />
 
-                <SectionLabel>🎯 Top 3 Priorities</SectionLabel>
-                <ul className="list-none space-y-1">
-                  {data.priorities.map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 py-1.5">
-                      <Checkbox
-                        checked={item.done}
-                        onToggle={() => updateCheckItem('priorities', i, 'done', !item.done)}
-                      />
-                      <TextInput
-                        value={item.text}
-                        onChange={(v) => updateCheckItem('priorities', i, 'text', v)}
-                        placeholder={`Priority ${i + 1}`}
-                        strikethrough={item.done}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <SectionLabel>🎯 Top Priorities</SectionLabel>
+                <AnimatePresence>
+                  <ul className="list-none space-y-1">
+                    {data.priorities.map((item, i) => (
+                      <motion.li
+                        key={i}
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center gap-3 py-1.5 group"
+                      >
+                        <Checkbox
+                          checked={item.done}
+                          onToggle={() => updateCheckItem('priorities', i, 'done', !item.done)}
+                        />
+                        <TextInput
+                          value={item.text}
+                          onChange={(v) => updateCheckItem('priorities', i, 'text', v)}
+                          onEnter={() => { if (i === data.priorities.length - 1) addCheckItem('priorities') }}
+                          placeholder={`Priority ${i + 1}`}
+                          strikethrough={item.done}
+                        />
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <RemoveButton onClick={() => removeCheckItem('priorities', i)} />
+                        </span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </AnimatePresence>
+                <AddRowButton onClick={() => addCheckItem('priorities')} label="Add priority" />
 
                 <SectionLabel>💻 LeetCode Tracker</SectionLabel>
-                <ul className="list-none space-y-1">
-                  {data.leetcode.map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 py-1.5">
-                      <Checkbox
-                        checked={item.done}
-                        onToggle={() => updateCheckItem('leetcode', i, 'done', !item.done)}
-                      />
-                      <TextInput
-                        value={item.text}
-                        onChange={(v) => updateCheckItem('leetcode', i, 'text', v)}
-                        placeholder={`Problem ${i + 1}: e.g. Two Sum`}
-                        strikethrough={item.done}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <AnimatePresence>
+                  <ul className="list-none space-y-1">
+                    {data.leetcode.map((item, i) => (
+                      <motion.li
+                        key={i}
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center gap-3 py-1.5 group"
+                      >
+                        <Checkbox
+                          checked={item.done}
+                          onToggle={() => updateCheckItem('leetcode', i, 'done', !item.done)}
+                        />
+                        <TextInput
+                          value={item.text}
+                          onChange={(v) => updateCheckItem('leetcode', i, 'text', v)}
+                          onEnter={() => { if (i === data.leetcode.length - 1) addCheckItem('leetcode') }}
+                          placeholder={`Problem ${i + 1}: e.g. Two Sum`}
+                          strikethrough={item.done}
+                        />
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <RemoveButton onClick={() => removeCheckItem('leetcode', i)} />
+                        </span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </AnimatePresence>
+                <AddRowButton onClick={() => addCheckItem('leetcode')} label="Add problem" />
 
                 <SectionLabel>📚 Study Session Notes</SectionLabel>
                 <Textarea
@@ -349,49 +443,79 @@ export default function DailyPlanner() {
                 />
 
                 <SectionLabel>💌 Outreach Tracker</SectionLabel>
-                <ul className="list-none space-y-1">
-                  {data.outreach.map((item, i) => (
-                    <li key={i} className="flex items-center gap-3 py-1.5">
-                      <Checkbox
-                        checked={item.done}
-                        onToggle={() => updateCheckItem('outreach', i, 'done', !item.done)}
-                      />
-                      <TextInput
-                        value={item.text}
-                        onChange={(v) => updateCheckItem('outreach', i, 'text', v)}
-                        placeholder={`Message ${i + 1}: Name / Company`}
-                        strikethrough={item.done}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <AnimatePresence>
+                  <ul className="list-none space-y-1">
+                    {data.outreach.map((item, i) => (
+                      <motion.li
+                        key={i}
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center gap-3 py-1.5 group"
+                      >
+                        <Checkbox
+                          checked={item.done}
+                          onToggle={() => updateCheckItem('outreach', i, 'done', !item.done)}
+                        />
+                        <TextInput
+                          value={item.text}
+                          onChange={(v) => updateCheckItem('outreach', i, 'text', v)}
+                          onEnter={() => { if (i === data.outreach.length - 1) addCheckItem('outreach') }}
+                          placeholder={`Message ${i + 1}: Name / Company`}
+                          strikethrough={item.done}
+                        />
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <RemoveButton onClick={() => removeCheckItem('outreach', i)} />
+                        </span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </AnimatePresence>
+                <AddRowButton onClick={() => addCheckItem('outreach')} label="Add contact" />
 
                 <SectionLabel>📋 Applications Sent</SectionLabel>
-                <ul className="list-none space-y-1">
-                  {data.applications.map((item, i) => (
-                    <li key={i} className="flex items-center gap-2 py-1.5">
-                      <Checkbox
-                        checked={item.done}
-                        onToggle={() => updateApp(i, 'done', !item.done)}
-                      />
-                      <input
-                        type="text"
-                        value={item.company}
-                        onChange={(e) => updateApp(i, 'company', e.target.value)}
-                        placeholder="Company"
-                        className={`flex-1 min-w-0 bg-transparent outline-none text-[13px] placeholder:text-ink-faint border-b border-transparent focus:border-petal-light transition-colors ${item.done ? 'line-through text-ink-faint' : 'text-ink-mid'}`}
-                      />
-                      <span className="text-ink-faint text-[12px] flex-shrink-0">→</span>
-                      <input
-                        type="text"
-                        value={item.role}
-                        onChange={(e) => updateApp(i, 'role', e.target.value)}
-                        placeholder="Role"
-                        className={`flex-1 min-w-0 bg-transparent outline-none text-[13px] placeholder:text-ink-faint border-b border-transparent focus:border-petal-light transition-colors ${item.done ? 'line-through text-ink-faint' : 'text-ink-mid'}`}
-                      />
-                    </li>
-                  ))}
-                </ul>
+                <AnimatePresence>
+                  <ul className="list-none space-y-1">
+                    {data.applications.map((item, i) => (
+                      <motion.li
+                        key={i}
+                        layout
+                        initial={{ opacity: 0, x: -10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -10, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="flex items-center gap-2 py-1.5 group"
+                      >
+                        <Checkbox
+                          checked={item.done}
+                          onToggle={() => updateApp(i, 'done', !item.done)}
+                        />
+                        <input
+                          type="text"
+                          value={item.company}
+                          onChange={(e) => updateApp(i, 'company', e.target.value)}
+                          placeholder="Company"
+                          className={`flex-1 min-w-0 bg-transparent outline-none text-[13px] placeholder:text-ink-faint border-b border-transparent focus:border-petal-light transition-colors ${item.done ? 'line-through text-ink-faint' : 'text-ink-mid'}`}
+                        />
+                        <span className="text-ink-faint text-[12px] flex-shrink-0">→</span>
+                        <input
+                          type="text"
+                          value={item.role}
+                          onChange={(e) => updateApp(i, 'role', e.target.value)}
+                          onKeyDown={(e) => { if (e.key === 'Enter' && i === data.applications.length - 1) addApp() }}
+                          placeholder="Role"
+                          className={`flex-1 min-w-0 bg-transparent outline-none text-[13px] placeholder:text-ink-faint border-b border-transparent focus:border-petal-light transition-colors ${item.done ? 'line-through text-ink-faint' : 'text-ink-mid'}`}
+                        />
+                        <span className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <RemoveButton onClick={() => removeApp(i)} />
+                        </span>
+                      </motion.li>
+                    ))}
+                  </ul>
+                </AnimatePresence>
+                <AddRowButton onClick={addApp} label="Add application" />
 
                 <SectionLabel>🌙 Evening Reflection</SectionLabel>
                 <Textarea

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import SectionHeader from './ui/SectionHeader'
 import FadeInView from './ui/FadeInView'
@@ -19,12 +19,22 @@ const habits = [
 ]
 
 const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+const LS_KEY = 'glow-planner-habits'
 
 export default function HabitTracker() {
   const [filled, setFilled] = useState<Record<string, boolean>>({})
 
+  useEffect(() => {
+    const raw = localStorage.getItem(LS_KEY)
+    if (raw) setFilled(JSON.parse(raw))
+  }, [])
+
   const toggle = (key: string) =>
-    setFilled((prev) => ({ ...prev, [key]: !prev[key] }))
+    setFilled((prev) => {
+      const next = { ...prev, [key]: !prev[key] }
+      localStorage.setItem(LS_KEY, JSON.stringify(next))
+      return next
+    })
 
   return (
     <section className="max-w-[1100px] mx-auto px-6 py-20" id="habits">
