@@ -10,9 +10,9 @@ const links = [
   { href: '#daily', label: 'Daily Planner' },
   { href: '#weekly', label: 'Job Tracker' },
   { href: '#habits', label: 'Habits' },
+  { href: '#meals', label: 'Meals' },
   { href: '#goals', label: 'Goals' },
   { href: '#fitness', label: 'Fitness' },
-  { href: '#meals', label: 'Meals' },
 ]
 
 export default function Nav() {

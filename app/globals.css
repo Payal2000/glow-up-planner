@@ -8,8 +8,8 @@
 ::-webkit-scrollbar-thumb { background: #f5d5de; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #e8a0b4; }
 
-/* Smooth scroll */
-html { scroll-behavior: smooth; }
+/* Smooth scroll + base font scale */
+html { scroll-behavior: smooth; font-size: 18px; }
 
 /* Editable cells */
 .editable-cell {

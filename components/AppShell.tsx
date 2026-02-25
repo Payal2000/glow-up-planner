@@ -19,15 +19,15 @@ export default function AppShell() {
       <Divider />
       <DailyPlanner />
       <Divider />
+      <JobTracker />
+      <Divider />
       <HabitTracker />
       <Divider />
-      <JobTracker />
+      <MealsSection />
       <Divider />
       <GoalsSection />
       <Divider />
       <FitnessSection />
-      <Divider />
-      <MealsSection />
       <Divider />
       <WhyLoveIt />
       <Footer />
