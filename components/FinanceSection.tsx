@@ -8,7 +8,7 @@ import { useDailySection } from '@/hooks/useDailySection'
 const balanceLabels = ['Total Income', 'Total Expenses', 'Savings Goal', 'Current Savings', 'Net Balance']
 
 interface FinanceRow { col1: string; col2: string; col3: string }
-interface FinanceData {
+interface FinanceData extends Record<string, unknown> {
   balance: Record<string, string>
   income: FinanceRow[]
   expenses: FinanceRow[]

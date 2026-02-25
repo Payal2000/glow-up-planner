@@ -18,7 +18,7 @@ const groceryItems = [
   'Other: ___________________',
 ]
 
-interface MealsData {
+interface MealsData extends Record<string, unknown> {
   grid: Record<string, string>  // key: "Monday-Breakfast"
   recipes: string
 }

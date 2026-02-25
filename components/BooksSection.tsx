@@ -13,7 +13,7 @@ const library = [
   '📓 Finished: ___________________',
 ]
 
-interface BooksData { authors: string; quotes: string }
+interface BooksData extends Record<string, unknown> { authors: string; quotes: string }
 const defaultBooks = (): BooksData => ({ authors: '', quotes: '' })
 const taClass = 'w-full border border-dashed border-petal-light rounded-lg p-3 font-dm text-[13px] text-ink-mid bg-warm-white resize-y outline-none focus:border-petal transition-colors placeholder:text-ink-faint'
 

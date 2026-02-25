@@ -28,7 +28,7 @@ const bodyTrackerLabels = [
   'How I Feel',
 ]
 
-interface FitnessData {
+interface FitnessData extends Record<string, unknown> {
   notes: string
   body: Record<string, string>
   goalTitle: string

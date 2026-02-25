@@ -18,7 +18,7 @@ const lifeAreaNames = [
 ]
 
 interface GoalItem { title: string; percent: number }
-interface GoalsData {
+interface GoalsData extends Record<string, unknown> {
   vision: string
   goals: GoalItem[]
   lifeRatings: Record<string, string>
