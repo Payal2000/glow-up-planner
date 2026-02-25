@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import SectionHeader from './ui/SectionHeader'
 import FadeInView from './ui/FadeInView'
 import { createClient } from '@/lib/supabase/client'
+import { useSelectedDate } from '@/context/DateContext'
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -185,12 +186,14 @@ function RemoveButton({ onClick }: { onClick: () => void }) {
 
 export default function DailyPlanner() {
   const supabase   = createClient()
-  const [date,     setDate]     = useState<Date>(new Date())
+  const { selectedDate: date, setSelectedDate: setDate } = useSelectedDate()
   const [data,     setData]     = useState<DayData>(defaultData())
   const [loading,  setLoading]  = useState(true)
   const [savedMsg, setSavedMsg] = useState(false)
   const saveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstLoad = useRef(true)
+  // Preserve non-planner fields (e.g. calendar notes) so saves don't wipe them
+  const extraFields = useRef<Record<string, unknown>>({})
 
   // Load from Supabase when date changes
   useEffect(() => {
@@ -210,7 +213,12 @@ export default function DailyPlanner() {
         .maybeSingle()
 
       if (!cancelled) {
-        setData(row?.data ?? defaultData())
+        const raw = row?.data ?? {}
+        // Preserve non-planner keys (e.g. notes from the calendar widget)
+        const { intention, priorities, leetcode, studyNotes, buildLog, outreach, applications, reflection, ...rest } = raw as Record<string, unknown>
+        extraFields.current = rest
+        // Merge with defaultData so missing fields always have the right shape
+        setData({ ...defaultData(), ...(raw as Partial<DayData>) })
         setLoading(false)
         // Allow saves only after load settles
         setTimeout(() => { isFirstLoad.current = false }, 0)
@@ -230,8 +238,10 @@ export default function DailyPlanner() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
+      // Merge planner data with preserved extra fields (e.g. calendar notes)
+      const merged = { ...extraFields.current, ...data }
       await supabase.from('daily_plans').upsert(
-        { user_id: user.id, date: toKey(date), data, updated_at: new Date().toISOString() },
+        { user_id: user.id, date: toKey(date), data: merged, updated_at: new Date().toISOString() },
         { onConflict: 'user_id,date' },
       )
 
@@ -308,7 +318,7 @@ export default function DailyPlanner() {
   ).length
 
   return (
-    <section className="max-w-[1100px] mx-auto px-6 py-20" id="daily">
+    <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="daily">
       <SectionHeader
         icon="📝"
         label="Plan Your Day"
@@ -321,7 +331,7 @@ export default function DailyPlanner() {
 
           {/* ── Header ── */}
           <div
-            className="px-9 py-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-wrap"
+            className="px-4 sm:px-9 py-5 sm:py-7 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 flex-wrap"
             style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
           >
             <div>
@@ -329,10 +339,10 @@ export default function DailyPlanner() {
               <p className="font-cormorant text-[15px] text-ink-soft">{fmtDate(date)}</p>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-start lg:justify-end">
               {/* Date nav */}
               <motion.button
-                onClick={() => setDate((d) => addDays(d, -1))}
+                onClick={() => setDate(addDays(date, -1))}
                 className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-ink-mid hover:bg-white transition-colors text-sm"
                 whileTap={{ scale: 0.9 }}
               >
@@ -350,7 +360,7 @@ export default function DailyPlanner() {
               )}
 
               <motion.button
-                onClick={() => setDate((d) => addDays(d, 1))}
+                onClick={() => setDate(addDays(date, 1))}
                 className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-ink-mid hover:bg-white transition-colors text-sm"
                 whileTap={{ scale: 0.9 }}
               >
@@ -370,7 +380,7 @@ export default function DailyPlanner() {
           </div>
 
           {/* ── Progress bar ── */}
-          <div className="px-9 py-3 border-b" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
+          <div className="px-4 sm:px-9 py-3 border-b" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
             <ProgressBar done={doneCount} total={totalCount} />
           </div>
 
@@ -385,7 +395,7 @@ export default function DailyPlanner() {
               className="grid grid-cols-1 md:grid-cols-2"
             >
               {/* ── Left column ── */}
-              <div className="p-9 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
+              <div className="p-4 sm:p-6 md:p-9 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
 
                 <SectionLabel>🌸 Morning Intention</SectionLabel>
                 <Textarea
@@ -470,7 +480,7 @@ export default function DailyPlanner() {
               </div>
 
               {/* ── Right column ── */}
-              <div className="p-9">
+              <div className="p-4 sm:p-6 md:p-9">
 
                 <SectionLabel>🔨 Build Log</SectionLabel>
                 <Textarea

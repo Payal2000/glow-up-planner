@@ -20,7 +20,7 @@ const fadeDown = (delay: number) => ({
 
 export default function Hero() {
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center text-center px-6 py-[60px] relative overflow-hidden"
+    <section className="min-h-screen flex flex-col items-center justify-center text-center px-4 sm:px-6 py-[60px] relative overflow-hidden"
       style={{ background: 'linear-gradient(180deg, #fffbf9 0%, #fdf0f4 50%, #f9e4eb 100%)' }}
     >
       {/* Floating orb top-right */}

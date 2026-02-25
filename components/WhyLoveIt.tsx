@@ -24,7 +24,7 @@ const gradients: Record<string, string> = {
 
 export default function WhyLoveIt() {
   return (
-    <section className="max-w-[800px] mx-auto px-6 py-20">
+    <section className="max-w-[800px] mx-auto px-4 sm:px-6 py-8 sm:py-12">
       <SectionHeader
         icon="🎀"
         label="Made For You"
@@ -32,7 +32,7 @@ export default function WhyLoveIt() {
       />
 
       <FadeInView delay={0.1}>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
           {features.map((f, i) => (
             <motion.div
               key={f.emoji}

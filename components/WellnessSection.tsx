@@ -32,7 +32,7 @@ const skincare = [
 
 export default function WellnessSection() {
   return (
-    <section className="max-w-[1100px] mx-auto px-6 py-20" id="wellness">
+    <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="wellness">
       <SectionHeader
         icon="🧖‍♀️"
         label="Glow From Within"
@@ -41,7 +41,7 @@ export default function WellnessSection() {
       />
 
       <FadeInView delay={0.1}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <PlannerCard color="rose" title="☀️ Morning Routine" desc="Start every day with intention.">
             <CardList items={morning} />
           </PlannerCard>

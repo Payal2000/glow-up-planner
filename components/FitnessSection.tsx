@@ -1,8 +1,10 @@
+'use client'
+
 import SectionHeader from './ui/SectionHeader'
 import FadeInView from './ui/FadeInView'
 import PlannerCard, { CardList } from './ui/PlannerCard'
 import ProgressBar from './ui/ProgressBar'
-import DpTextarea from './ui/DpTextarea'
+import { useDailySection } from '@/hooks/useDailySection'
 
 const workoutPlan = [
   'AM (Fasted, 15 min): HIIT / Cardio / Yoga',
@@ -16,39 +18,89 @@ const workoutPlan = [
   'Sun — Rest Day',
 ]
 
-const bodyTracker = [
-  'Current Weight: ___________',
-  'Goal Weight: ___________',
-  'Waist: ___________',
-  'Hips: ___________',
-  'Arms: ___________',
-  'Energy Level (1–10): ___________',
-  'How I Feel: ___________',
+const bodyTrackerLabels = [
+  'Current Weight',
+  'Goal Weight',
+  'Waist',
+  'Hips',
+  'Arms',
+  'Energy Level (1–10)',
+  'How I Feel',
 ]
 
-export default function FitnessSection() {
-  return (
-    <section className="max-w-[1100px] mx-auto px-6 py-20" id="fitness">
-      <SectionHeader
-        icon="💪"
-        label="Move Your Body"
-        title="Fitness & Glow-Up"
-        subtitle="45 min daily — 15 min fasted AM + 30 min PM strength."
-      />
+interface FitnessData {
+  notes: string
+  body: Record<string, string>
+  goalTitle: string
+  goalPercent: number
+}
 
+const defaultFitness = (): FitnessData => ({
+  notes: '',
+  body: {},
+  goalTitle: '',
+  goalPercent: 0,
+})
+
+const inputClass = 'flex-1 min-w-0 bg-transparent outline-none text-[13px] placeholder:text-ink-faint border-b border-petal-light focus:border-petal transition-colors text-ink-mid'
+const taClass = 'w-full border border-dashed border-petal-light rounded-lg p-3 font-dm text-[13px] text-ink-mid bg-warm-white resize-y outline-none focus:border-petal transition-colors placeholder:text-ink-faint'
+
+export default function FitnessSection() {
+  const { data, update, saved } = useDailySection<FitnessData>('fitness', defaultFitness)
+
+  return (
+    <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="fitness">
+      <SectionHeader icon="💪" label="Move Your Body" title="Fitness & Glow-Up" subtitle="45 min daily — 15 min fasted AM + 30 min PM strength." />
+      {saved && <p className="text-[11px] text-petal-deep font-semibold mb-4 text-right">✓ Saved</p>}
       <FadeInView delay={0.1}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           <PlannerCard color="sage" title="🏋️ Workout Planner" desc="Split across morning & evening for max results.">
             <CardList items={workoutPlan} />
           </PlannerCard>
 
           <PlannerCard color="sky" title="📊 Body Progress Tracker" desc="Track changes weekly — be patient with yourself.">
-            <CardList items={bodyTracker} />
+            <ul className="list-none">
+              {bodyTrackerLabels.map((label) => (
+                <li key={label} className="flex items-center gap-2 py-2 border-b border-[rgba(200,160,170,0.1)] last:border-0">
+                  <span className="text-[12px] text-ink-soft w-[110px] flex-shrink-0">{label}:</span>
+                  <input
+                    value={data.body[label] ?? ''}
+                    onChange={e => update('body', { ...data.body, [label]: e.target.value })}
+                    placeholder="—"
+                    className={inputClass}
+                  />
+                </li>
+              ))}
+            </ul>
           </PlannerCard>
 
           <PlannerCard color="gold" title="🎯 Fitness Goals" desc="What are you working toward?">
-            <ProgressBar title="Goal: ____________________" percent={20} label="20% there" />
-            <DpTextarea placeholder="Notes: what's working, what to adjust..." className="mt-3" />
+            <div className="mb-3">
+              <input
+                value={data.goalTitle}
+                onChange={e => update('goalTitle', e.target.value)}
+                placeholder="Goal: ____________________"
+                className="w-full text-[13px] text-ink-mid bg-transparent outline-none border-b border-petal-light focus:border-petal transition-colors mb-2 pb-1"
+              />
+              <div className="flex items-center gap-2 mb-1">
+                <span className="text-[11px] text-ink-soft">Progress:</span>
+                <input
+                  type="range" min={0} max={100}
+                  value={data.goalPercent}
+                  onChange={e => update('goalPercent', Number(e.target.value))}
+                  className="flex-1 accent-petal-deep"
+                />
+                <span className="text-[11px] font-semibold text-petal-deep w-8">{data.goalPercent}%</span>
+              </div>
+              <ProgressBar title="" percent={data.goalPercent} label={`${data.goalPercent}% there`} />
+            </div>
+            <textarea
+              value={data.notes}
+              onChange={e => update('notes', e.target.value)}
+              placeholder="Notes: what's working, what to adjust..."
+              style={{ minHeight: 80 }}
+              className={taClass}
+            />
           </PlannerCard>
         </div>
       </FadeInView>

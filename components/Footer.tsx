@@ -1,7 +1,7 @@
 export default function Footer() {
   return (
     <footer
-      className="text-center px-6 py-[60px]"
+      className="text-center px-4 sm:px-6 py-[60px]"
       style={{ background: 'linear-gradient(180deg, #fefaf8, #f9e4eb)' }}
     >
       <p

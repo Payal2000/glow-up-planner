@@ -44,7 +44,7 @@ export default function PlannerCard({ color, title, desc, children, className = 
       {/* Gradient top bar */}
       <div className="h-1 w-full" style={{ background: gradients[color] }} />
 
-      <div className="p-9">
+      <div className="p-5 sm:p-7 md:p-9">
         <h3 className="font-playfair text-xl text-ink-dark mb-1.5">{title}</h3>
         {desc && <p className="text-[13px] text-ink-soft mb-5">{desc}</p>}
 
