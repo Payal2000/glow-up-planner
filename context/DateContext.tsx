@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useState, useEffect } from 'react'
 
 interface DateContextValue {
   selectedDate: Date
@@ -13,9 +13,16 @@ const DateContext = createContext<DateContextValue>({
 })
 
 export function DateProvider({ children }: { children: React.ReactNode }) {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date())
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+
+  useEffect(() => {
+    setSelectedDate(new Date())
+  }, [])
+
+  // During SSR selectedDate is null; suppress hydration warnings on date-displaying
+  // elements handle the brief server/client mismatch until useEffect fires on client
   return (
-    <DateContext.Provider value={{ selectedDate, setSelectedDate }}>
+    <DateContext.Provider value={{ selectedDate: selectedDate ?? new Date(), setSelectedDate }}>
       {children}
     </DateContext.Provider>
   )
