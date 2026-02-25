@@ -1,14 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import Sidebar, { type PanelId } from './Sidebar'
-import TopBar from './TopBar'
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
+import { AppSidebar, type PanelId } from '@/components/app-sidebar'
+import { SiteHeader } from '@/components/site-header'
 import HomePanel from './HomePanel'
 import AgentsPanel from './AgentsPanel'
 import TimetableTimeline from './TimetableTimeline'
 import JobsKanban from './JobsKanban'
 
-// Existing sections (adapted for panel use)
+// Existing sections
 import DailyPlanner from '../DailyPlanner'
 import HabitTracker from '../HabitTracker'
 import WeeklyView from '../WeeklyView'
@@ -18,7 +19,6 @@ import MealsSection from '../MealsSection'
 
 export default function DashboardShell() {
   const [panel, setPanel] = useState<PanelId>('home')
-  const [collapsed, setCollapsed] = useState(false)
 
   const renderPanel = () => {
     switch (panel) {
@@ -36,19 +36,14 @@ export default function DashboardShell() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-warm-white">
-      <Sidebar
-        active={panel}
-        onNav={setPanel}
-        collapsed={collapsed}
-        onToggle={() => setCollapsed(c => !c)}
-      />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <TopBar panel={panel} onOpenAgents={() => setPanel('agents')} />
-        <main className="flex-1 overflow-y-auto">
+    <SidebarProvider>
+      <AppSidebar activePanel={panel} onNav={setPanel} variant="inset" />
+      <SidebarInset>
+        <SiteHeader panel={panel} onOpenAgents={() => setPanel('agents')} />
+        <main className="flex-1 overflow-y-auto bg-warm-white">
           {renderPanel()}
         </main>
-      </div>
-    </div>
+      </SidebarInset>
+    </SidebarProvider>
   )
 }
