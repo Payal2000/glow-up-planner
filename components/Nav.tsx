@@ -8,7 +8,7 @@ import AuthButton from './AuthButton'
 const links = [
   { href: '#timetable', label: 'Timetable' },
   { href: '#daily', label: 'Daily Planner' },
-  { href: '#weekly', label: 'Weekly View' },
+  { href: '#weekly', label: 'Job Tracker' },
   { href: '#habits', label: 'Habits' },
   { href: '#goals', label: 'Goals' },
   { href: '#fitness', label: 'Fitness' },

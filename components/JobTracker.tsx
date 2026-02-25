@@ -109,13 +109,30 @@ export default function JobTracker() {
   // ── Add row ───────────────────────────────────────────────────────────────
   const addRow = async () => {
     if (!userId) return
-    const { data, error } = await supabase
+    const newId = crypto.randomUUID()
+    const newApp: Application = {
+      id: newId,
+      company: '',
+      position: '',
+      status: 'Applied',
+      date: today(),
+      salary: '',
+      nextActions: [],
+      website: '',
+      contact: '',
+      referenceLink: '',
+    }
+    // Optimistic update — add row immediately
+    setApps(prev => [...prev, newApp])
+    setSaveStatus('saving')
+    const { error } = await supabase
       .from('job_applications')
       .insert({
+        id: newId,
         user_id: userId,
         company: '',
         position: '',
-        status: '',
+        status: 'Applied',
         date: today(),
         salary: '',
         next_actions: [],
@@ -123,9 +140,15 @@ export default function JobTracker() {
         contact: '',
         reference_link: '',
       })
-      .select()
-      .single()
-    if (!error && data) setApps(prev => [...prev, rowToApp(data as DbRow)])
+    if (error) {
+      console.error('addRow error:', error)
+      setApps(prev => prev.filter(a => a.id !== newId))
+      setSaveStatus('error')
+      setTimeout(() => setSaveStatus('idle'), 3000)
+    } else {
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 1500)
+    }
   }
 
   // ── Delete row ────────────────────────────────────────────────────────────
@@ -264,7 +287,7 @@ export default function JobTracker() {
             style={{ borderColor: 'rgba(200,160,170,0.12)', background: 'linear-gradient(135deg, #fdf5f7 0%, #fff 100%)' }}
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-[12px] font-semibold tracking-[1.5px] uppercase text-ink-soft">Applications</span>
+              <span className="text-[12px] font-semibold tracking-[1.5px] uppercase text-ink-soft">Job Tracker</span>
               <span className="text-[11px] font-bold text-petal-deep bg-petal-pale rounded-full px-2 py-0.5">{apps.length}</span>
             </div>
 

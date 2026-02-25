@@ -3,7 +3,7 @@
 import { DateProvider } from '@/context/DateContext'
 import TimetableSection from './TimetableSection'
 import DailyPlanner from './DailyPlanner'
-import WeeklyView from './WeeklyView'
+import JobTracker from './JobTracker'
 import HabitTracker from './HabitTracker'
 import GoalsSection from './GoalsSection'
 import FitnessSection from './FitnessSection'
@@ -21,7 +21,7 @@ export default function AppShell() {
       <Divider />
       <HabitTracker />
       <Divider />
-      <WeeklyView />
+      <JobTracker />
       <Divider />
       <GoalsSection />
       <Divider />
