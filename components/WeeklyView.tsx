@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState, useCallback, useMemo, useRef } from 'react'
+import React, { useEffect, useState, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import SectionHeader from './ui/SectionHeader'
 import FadeInView from './ui/FadeInView'
@@ -20,6 +20,37 @@ interface Application {
   website: string
   contact: string
   referenceLink: string
+}
+
+// Shape of a row in job_applications table
+interface DbRow {
+  id: string
+  user_id: string
+  company: string
+  position: string
+  status: string
+  date: string
+  salary: string
+  next_actions: NextAction[]
+  website: string
+  contact: string
+  reference_link: string
+  created_at: string
+}
+
+function rowToApp(row: DbRow): Application {
+  return {
+    id: row.id,
+    company: row.company ?? '',
+    position: row.position ?? '',
+    status: (row.status as Status) ?? '',
+    date: row.date ?? '',
+    salary: row.salary ?? '',
+    nextActions: row.next_actions ?? [],
+    website: row.website ?? '',
+    contact: row.contact ?? '',
+    referenceLink: row.reference_link ?? '',
+  }
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
@@ -47,96 +78,104 @@ const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
 }
 
 const today = () => new Date().toISOString().split('T')[0]
-
-function newApp(): Application {
-  return { id: Date.now().toString(), company: '', position: '', status: '', date: today(), salary: '', nextActions: [], website: '', contact: '', referenceLink: '' }
-}
-
-const STORAGE_KEY = 'job-applications-v1'
 const STATUS_ORDER: Status[] = ['Applied', 'Interviewing', 'Offer', 'Rejected', 'Withdrawn']
 
-export default function WeeklyView() {
+export default function JobTracker() {
   const supabase = createClient()
   const [apps, setApps] = useState<Application[]>([])
   const [userId, setUserId] = useState<string | null>(null)
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
   const [activeTab, setActiveTab] = useState<'tracker' | 'analytics'>('tracker')
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const pendingRef = useRef<Application[] | null>(null)
 
+  // Track pending field updates per row to debounce individual field saves
+  const debounceRefs = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+  // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser()
-      if (user) {
-        setUserId(user.id)
-        const { data: row } = await supabase
-          .from('daily_plans')
-          .select('data')
-          .eq('user_id', user.id)
-          .eq('date', 'job-tracker')
-          .maybeSingle()
-        if (row?.data?.applications) { setApps(row.data.applications); return }
-      }
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY)
-        setApps(raw ? JSON.parse(raw) : [])
-      } catch { setApps([]) }
+      if (!user) return
+      setUserId(user.id)
+      const { data } = await supabase
+        .from('job_applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+      if (data) setApps((data as DbRow[]).map(rowToApp))
     }
     load()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const flushSave = useCallback(async (next: Application[], uid: string) => {
-    setSaveStatus('saving')
-    const { error } = await supabase.from('daily_plans').upsert(
-      { user_id: uid, date: 'job-tracker', data: { applications: next }, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,date' }
-    )
-    if (error) {
-      setSaveStatus('error')
-      setTimeout(() => setSaveStatus('idle'), 3000)
-    } else {
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 2000)
-    }
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  // ── Add row ───────────────────────────────────────────────────────────────
+  const addRow = async () => {
+    if (!userId) return
+    const { data, error } = await supabase
+      .from('job_applications')
+      .insert({
+        user_id: userId,
+        company: '',
+        position: '',
+        status: '',
+        date: today(),
+        salary: '',
+        next_actions: [],
+        website: '',
+        contact: '',
+        reference_link: '',
+      })
+      .select()
+      .single()
+    if (!error && data) setApps(prev => [...prev, rowToApp(data as DbRow)])
+  }
 
-  const persist = useCallback((next: Application[]) => {
-    setApps(next)
-    if (userId) {
-      pendingRef.current = next
-      if (debounceRef.current) clearTimeout(debounceRef.current)
-      debounceRef.current = setTimeout(() => {
-        if (pendingRef.current) flushSave(pendingRef.current, userId)
-      }, 800)
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-    }
-  }, [userId, flushSave])
+  // ── Delete row ────────────────────────────────────────────────────────────
+  const deleteRow = async (id: string) => {
+    if (!userId) return
+    setApps(prev => prev.filter(a => a.id !== id))
+    await supabase.from('job_applications').delete().eq('id', id).eq('user_id', userId)
+  }
 
-  const update = (id: string, field: keyof Application, value: unknown) =>
-    persist(apps.map(a => a.id === id ? { ...a, [field]: value } : a))
+  // ── Update a single field (debounced) ─────────────────────────────────────
+  const update = (id: string, field: keyof Application, value: unknown) => {
+    // Optimistic update
+    setApps(prev => prev.map(a => a.id === id ? { ...a, [field]: value } : a))
+
+    if (!userId) return
+    // Map camelCase field → snake_case column
+    const colMap: Partial<Record<keyof Application, string>> = {
+      nextActions:   'next_actions',
+      referenceLink: 'reference_link',
+    }
+    const col = colMap[field] ?? field
+
+    if (debounceRefs.current[id + col]) clearTimeout(debounceRefs.current[id + col])
+    debounceRefs.current[id + col] = setTimeout(async () => {
+      setSaveStatus('saving')
+      const { error } = await supabase
+        .from('job_applications')
+        .update({ [col]: value, updated_at: new Date().toISOString() })
+        .eq('id', id)
+        .eq('user_id', userId)
+      if (error) {
+        setSaveStatus('error')
+        setTimeout(() => setSaveStatus('idle'), 3000)
+      } else {
+        setSaveStatus('saved')
+        setTimeout(() => setSaveStatus('idle'), 1500)
+      }
+    }, 600)
+  }
 
   const toggleAction = (id: string, action: NextAction) => {
     const app = apps.find(a => a.id === id)
     if (!app) return
     const has = app.nextActions.includes(action)
-    update(id, 'nextActions', has ? app.nextActions.filter(a => a !== action) : [...app.nextActions, action])
+    update(id, 'nextActions', has
+      ? app.nextActions.filter(a => a !== action)
+      : [...app.nextActions, action])
   }
 
-  const addRow = () => {
-    const next = [...apps, newApp()]
-    setApps(next)
-    if (userId) flushSave(next, userId)
-    else localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  }
-  const deleteRow = (id: string) => {
-    const next = apps.filter(a => a.id !== id)
-    setApps(next)
-    if (userId) flushSave(next, userId)
-    else localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
-  }
-
-  // ── Cold Outreach Drafts ──
+  // ── Cold Outreach ─────────────────────────────────────────────────────────
   const [outreach, setOutreach] = useState<Record<string, { status: 'idle' | 'loading' | 'done' | 'error'; message: string }>>({})
 
   const draftOutreach = async (app: Application) => {
@@ -160,10 +199,7 @@ export default function WeeklyView() {
 
   const copyOutreach = (msg: string) => navigator.clipboard.writeText(msg)
 
-  const statusLabel = saveStatus === 'saving' ? 'Saving…' : saveStatus === 'saved' ? '✓ Saved' : saveStatus === 'error' ? '⚠ Save failed' : userId ? 'Synced to cloud' : 'Saved locally'
-  const offerCount = apps.filter(a => a.status === 'Offer').length
-
-  // Sort by date descending for display; undated rows go to bottom
+  // ── Derived ───────────────────────────────────────────────────────────────
   const sortedApps = useMemo(() =>
     [...apps].sort((a, b) => {
       if (!a.date && !b.date) return 0
@@ -173,9 +209,9 @@ export default function WeeklyView() {
     }),
   [apps])
 
-  // ── Analytics ──
   const filledApps = apps.filter(a => a.company || a.position)
   const totalApps = filledApps.length
+  const offerCount = apps.filter(a => a.status === 'Offer').length
 
   const statusCounts = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -184,7 +220,7 @@ export default function WeeklyView() {
       counts[s] = (counts[s] ?? 0) + 1
     }
     return counts
-  }, [filledApps]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filledApps])
 
   const byMonth = useMemo(() => {
     const map: Record<string, number> = {}
@@ -198,18 +234,24 @@ export default function WeeklyView() {
     return Object.entries(map).sort((a, b) =>
       new Date('01 ' + a[0]).getTime() - new Date('01 ' + b[0]).getTime()
     )
-  }, [filledApps]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [filledApps])
 
   const maxMonth = Math.max(...byMonth.map(([, v]) => v), 1)
   const responded = (statusCounts['Interviewing'] ?? 0) + (statusCounts['Offer'] ?? 0)
   const responseRate = totalApps > 0 ? Math.round((responded / totalApps) * 100) : 0
 
+  const statusLabel = saveStatus === 'saving' ? 'Saving…'
+    : saveStatus === 'saved'  ? '✓ Saved'
+    : saveStatus === 'error'  ? '⚠ Save failed'
+    : userId ? 'Synced to cloud' : 'Not signed in'
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <section className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="weekly">
       <SectionHeader
         icon="💼"
         label="Career"
-        title="Job Application Tracker"
+        title="Job Tracker"
         subtitle="Track every application, interview, and offer in one place."
       />
 
@@ -222,12 +264,11 @@ export default function WeeklyView() {
             style={{ borderColor: 'rgba(200,160,170,0.12)', background: 'linear-gradient(135deg, #fdf5f7 0%, #fff 100%)' }}
           >
             <div className="flex items-center gap-2.5">
-              <span className="text-[12px] font-semibold tracking-[1.5px] uppercase text-ink-soft">Applications History</span>
+              <span className="text-[12px] font-semibold tracking-[1.5px] uppercase text-ink-soft">Applications</span>
               <span className="text-[11px] font-bold text-petal-deep bg-petal-pale rounded-full px-2 py-0.5">{apps.length}</span>
             </div>
 
             <div className="flex items-center gap-3">
-              {/* Tab pills */}
               <div className="flex items-center bg-petal-pale rounded-full p-0.5 gap-0.5">
                 {(['tracker', 'analytics'] as const).map(tab => (
                   <motion.button
@@ -244,12 +285,10 @@ export default function WeeklyView() {
                   </motion.button>
                 ))}
               </div>
-
               <span className="text-[11px] font-semibold tracking-wide uppercase text-petal-deep">{statusLabel}</span>
             </div>
           </div>
 
-          {/* ── Tab content ── */}
           <AnimatePresence mode="wait">
 
             {/* ── Tracker Tab ── */}
@@ -372,7 +411,9 @@ export default function WeeklyView() {
                       })}
                       {apps.length === 0 && (
                         <tr>
-                          <td colSpan={10} className="py-14 text-center text-[13px] text-ink-faint">No applications yet — add one below!</td>
+                          <td colSpan={10} className="py-14 text-center text-[13px] text-ink-faint">
+                            {userId ? 'No applications yet — add one below!' : 'Sign in to track applications.'}
+                          </td>
                         </tr>
                       )}
                     </tbody>
@@ -401,7 +442,6 @@ export default function WeeklyView() {
                         <input value={app.website} onChange={e => update(app.id, 'website', e.target.value)} placeholder="Website" className="bg-transparent outline-none placeholder:text-gray-300" />
                         <input value={app.contact} onChange={e => update(app.id, 'contact', e.target.value)} placeholder="Contact" className="bg-transparent outline-none placeholder:text-gray-300" />
                       </div>
-                      {/* Mobile outreach draft */}
                       <AnimatePresence>
                         {outreach[app.id]?.status === 'done' && (
                           <motion.div
@@ -435,7 +475,11 @@ export default function WeeklyView() {
                       <span className="text-[#92670a] font-semibold">📅 {apps.filter(a => a.status === 'Interviewing').length} Interview{apps.filter(a => a.status === 'Interviewing').length > 1 ? 's' : ''}</span>
                     )}
                   </div>
-                  <button onClick={addRow} className="text-[12px] font-semibold px-4 py-2 rounded-full border border-petal-light text-gray-500 hover:bg-petal-pale hover:border-petal transition-colors">
+                  <button
+                    onClick={addRow}
+                    disabled={!userId}
+                    className="text-[12px] font-semibold px-4 py-2 rounded-full border border-petal-light text-gray-500 hover:bg-petal-pale hover:border-petal transition-colors disabled:opacity-40"
+                  >
                     + Add Application
                   </button>
                 </div>
@@ -460,30 +504,20 @@ export default function WeeklyView() {
                   </div>
                 ) : (
                   <div className="space-y-8">
-
-                    {/* Stat cards */}
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                       {[
-                        { label: 'Total Applied', value: totalApps, color: '#c77d94', bg: '#fdf0f4' },
-                        { label: 'Interviewing', value: statusCounts['Interviewing'] ?? 0, color: '#92670a', bg: '#fef3c7' },
+                        { label: 'Total Applied', value: totalApps,        color: '#c77d94', bg: '#fdf0f4' },
+                        { label: 'Interviewing',  value: statusCounts['Interviewing'] ?? 0, color: '#92670a', bg: '#fef3c7' },
                         { label: 'Offers',        value: statusCounts['Offer'] ?? 0,        color: '#7c3aed', bg: '#ede9fe' },
                         { label: 'Response Rate', value: `${responseRate}%`,                color: '#3b6fa0', bg: '#dbeafe' },
                       ].map((card, i) => (
-                        <motion.div
-                          key={card.label}
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ duration: 0.3, delay: i * 0.06 }}
-                          className="rounded-2xl p-4"
-                          style={{ background: card.bg }}
-                        >
+                        <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: i * 0.06 }} className="rounded-2xl p-4" style={{ background: card.bg }}>
                           <p className="text-[10px] font-semibold tracking-[2px] uppercase mb-1" style={{ color: card.color }}>{card.label}</p>
                           <p className="font-playfair text-3xl" style={{ color: card.color }}>{card.value}</p>
                         </motion.div>
                       ))}
                     </div>
 
-                    {/* Status breakdown bars */}
                     <div>
                       <p className="text-[11px] font-semibold tracking-[3px] uppercase text-petal mb-4">Status Breakdown</p>
                       <div className="space-y-3">
@@ -493,66 +527,33 @@ export default function WeeklyView() {
                           const count  = statusCounts[s] ?? 0
                           const pct    = Math.round((count / totalApps) * 100)
                           return (
-                            <motion.div
-                              key={s}
-                              initial={{ opacity: 0, x: -12 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.35, delay: i * 0.07 }}
-                              className="flex items-center gap-3"
-                            >
-                              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full w-[110px] text-center flex-shrink-0"
-                                style={{ background: colors.bg, color: colors.text }}>
-                                {s}
-                              </span>
+                            <motion.div key={s} initial={{ opacity: 0, x: -12 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.35, delay: i * 0.07 }} className="flex items-center gap-3">
+                              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full w-[110px] text-center flex-shrink-0" style={{ background: colors.bg, color: colors.text }}>{s}</span>
                               <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                <motion.div
-                                  className="h-full rounded-full"
-                                  style={{ background: bar }}
-                                  initial={{ width: 0 }}
-                                  animate={{ width: `${pct}%` }}
-                                  transition={{ duration: 0.6, ease: 'easeOut', delay: i * 0.07 }}
-                                />
+                                <motion.div className="h-full rounded-full" style={{ background: bar }} initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6, ease: 'easeOut', delay: i * 0.07 }} />
                               </div>
-                              <span className="text-[12px] font-semibold text-ink-mid w-[54px] text-right flex-shrink-0">
-                                {count} · {pct}%
-                              </span>
+                              <span className="text-[12px] font-semibold text-ink-mid w-[54px] text-right flex-shrink-0">{count} · {pct}%</span>
                             </motion.div>
                           )
                         })}
                       </div>
                     </div>
 
-                    {/* Applications by month */}
                     {byMonth.length > 0 && (
                       <div>
                         <p className="text-[11px] font-semibold tracking-[3px] uppercase text-petal mb-4">Applications by Month</p>
                         <div className="flex items-end gap-2 h-28">
-                          {byMonth.map(([month, count], i) => {
-                            const heightPct = Math.round((count / maxMonth) * 100)
-                            return (
-                              <motion.div
-                                key={month}
-                                className="flex flex-col items-center gap-1 flex-1 min-w-0"
-                                initial={{ opacity: 0, scaleY: 0 }}
-                                animate={{ opacity: 1, scaleY: 1 }}
-                                transition={{ duration: 0.4, delay: i * 0.05, ease: 'easeOut' }}
-                                style={{ transformOrigin: 'bottom' }}
-                              >
-                                <span className="text-[10px] font-semibold text-ink-mid">{count}</span>
-                                <div className="w-full rounded-t-lg" style={{
-                                  height: `${heightPct}%`,
-                                  minHeight: 4,
-                                  background: 'linear-gradient(180deg, #e8a0b4, #c77d94)',
-                                }} />
-                                <span className="text-[9px] text-ink-faint font-medium truncate w-full text-center">{month}</span>
-                              </motion.div>
-                            )
-                          })}
+                          {byMonth.map(([month, count], i) => (
+                            <motion.div key={month} className="flex flex-col items-center gap-1 flex-1 min-w-0" initial={{ opacity: 0, scaleY: 0 }} animate={{ opacity: 1, scaleY: 1 }} transition={{ duration: 0.4, delay: i * 0.05, ease: 'easeOut' }} style={{ transformOrigin: 'bottom' }}>
+                              <span className="text-[10px] font-semibold text-ink-mid">{count}</span>
+                              <div className="w-full rounded-t-lg" style={{ height: `${Math.round((count / maxMonth) * 100)}%`, minHeight: 4, background: 'linear-gradient(180deg, #e8a0b4, #c77d94)' }} />
+                              <span className="text-[9px] text-ink-faint font-medium truncate w-full text-center">{month}</span>
+                            </motion.div>
+                          ))}
                         </div>
                       </div>
                     )}
 
-                    {/* Conversion pipeline */}
                     <div>
                       <p className="text-[11px] font-semibold tracking-[3px] uppercase text-petal mb-4">Conversion Pipeline</p>
                       <div className="flex items-center gap-1 flex-wrap">
@@ -570,7 +571,6 @@ export default function WeeklyView() {
                         })}
                       </div>
                     </div>
-
                   </div>
                 )}
               </motion.div>
@@ -595,23 +595,14 @@ function StatusSelect({ value, onChange }: { value: Status; onChange: (v: Status
     if (btnRef.current) {
       const rect = btnRef.current.getBoundingClientRect()
       const flipUp = rect.bottom + DROPDOWN_H > window.innerHeight
-      setPos({
-        left: rect.left,
-        top: flipUp ? rect.top - DROPDOWN_H - 4 : rect.bottom + 4,
-        flipUp,
-      })
+      setPos({ left: rect.left, top: flipUp ? rect.top - DROPDOWN_H - 4 : rect.bottom + 4, flipUp })
     }
     setOpen(o => !o)
   }
 
   return (
     <>
-      <button
-        ref={btnRef}
-        onClick={handleOpen}
-        className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-opacity hover:opacity-80"
-        style={{ background: colors.bg, color: colors.text }}
-      >
+      <button ref={btnRef} onClick={handleOpen} className="text-[11px] font-semibold px-2.5 py-1 rounded-full whitespace-nowrap transition-opacity hover:opacity-80" style={{ background: colors.bg, color: colors.text }}>
         {value || '+ Status'}
       </button>
       <AnimatePresence>
@@ -651,9 +642,7 @@ function NextActionSelect({ actions, onChange }: { actions: NextAction[]; onChan
       {actions.map(a => {
         const c = ACTION_COLORS[a] ?? { bg: '#f3f4f6', text: '#6b7280' }
         return (
-          <span key={a} onClick={() => onChange(a)} title="Click to remove" className="text-[11px] font-semibold px-2 py-0.5 rounded-full cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap" style={{ background: c.bg, color: c.text }}>
-            {a}
-          </span>
+          <span key={a} onClick={() => onChange(a)} title="Click to remove" className="text-[11px] font-semibold px-2 py-0.5 rounded-full cursor-pointer hover:opacity-70 transition-opacity whitespace-nowrap" style={{ background: c.bg, color: c.text }}>{a}</span>
         )
       })}
       <button onClick={() => setOpen(o => !o)} className="text-[12px] text-ink-faint hover:text-petal-deep w-5 h-5 flex items-center justify-center rounded-full hover:bg-petal-pale transition-colors flex-shrink-0" title="Add action">+</button>
@@ -673,9 +662,7 @@ function NextActionSelect({ actions, onChange }: { actions: NextAction[]; onChan
                 const has = actions.includes(a)
                 return (
                   <button key={a} onClick={() => { onChange(a); setOpen(false) }} className="w-full text-left px-2.5 py-1.5 rounded-xl hover:bg-petal-pale transition-colors flex items-center gap-2">
-                    <span className="w-4 h-4 rounded flex items-center justify-center text-[10px] flex-shrink-0 border transition-colors" style={{ borderColor: has ? c.text : '#e5e7eb', background: has ? c.bg : 'transparent', color: c.text }}>
-                      {has ? '✓' : ''}
-                    </span>
+                    <span className="w-4 h-4 rounded flex items-center justify-center text-[10px] flex-shrink-0 border transition-colors" style={{ borderColor: has ? c.text : '#e5e7eb', background: has ? c.bg : 'transparent', color: c.text }}>{has ? '✓' : ''}</span>
                     <span className="text-[12px] font-semibold" style={{ color: c.text }}>{a}</span>
                   </button>
                 )
