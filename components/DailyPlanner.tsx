@@ -310,6 +310,62 @@ export default function DailyPlanner() {
     }
   }
 
+  // ── Study Plan ──
+  const [planStatus, setPlanStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [studyPlan, setStudyPlan] = useState('')
+
+  const generateStudyPlan = async () => {
+    setPlanStatus('loading')
+    try {
+      const res = await fetch('/api/agent/study-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: toKey(date) }),
+      })
+      if (!res.ok) throw new Error('API error')
+      const json = await res.json()
+      setStudyPlan(json.plan)
+      setPlanStatus('done')
+    } catch {
+      setPlanStatus('error')
+    }
+  }
+
+  // ── Daily Brief ──
+  const [briefStatus, setBriefStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle')
+  const [brief, setBrief] = useState('')
+  const [briefSaved, setBriefSaved] = useState(false)
+
+  const generateBrief = async () => {
+    setBriefStatus('loading')
+    try {
+      const res = await fetch('/api/agent/daily-brief', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date: toKey(date) }),
+      })
+      if (!res.ok) throw new Error('API error')
+      const json = await res.json()
+      setBrief(json.brief)
+      setBriefStatus('done')
+    } catch {
+      setBriefStatus('error')
+    }
+  }
+
+  const saveBriefToNotes = async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data: existing } = await supabase.from('daily_plans').select('data').eq('user_id', user.id).eq('date', toKey(date)).maybeSingle()
+    const merged = { ...(existing?.data ?? {}), notes: brief }
+    await supabase.from('daily_plans').upsert(
+      { user_id: user.id, date: toKey(date), data: merged, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,date' },
+    )
+    setBriefSaved(true)
+    setTimeout(() => setBriefSaved(false), 2000)
+  }
+
   // Progress
   const allCheckable = [...data.priorities, ...data.leetcode, ...data.outreach, ...data.applications]
   const doneCount    = allCheckable.filter((i) => i.done).length
@@ -336,7 +392,7 @@ export default function DailyPlanner() {
           >
             <div>
               <h3 className="font-playfair text-2xl text-ink-dark mb-1">Today&apos;s Plan</h3>
-              <p className="font-cormorant text-[15px] text-ink-soft">{fmtDate(date)}</p>
+              <p className="font-cormorant text-[15px] text-ink-soft" suppressHydrationWarning>{fmtDate(date)}</p>
             </div>
 
             <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-start lg:justify-end">
@@ -370,6 +426,24 @@ export default function DailyPlanner() {
               <SavedBadge show={savedMsg} />
 
               <motion.button
+                onClick={generateStudyPlan}
+                disabled={planStatus === 'loading'}
+                className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50"
+                whileTap={{ scale: 0.95 }}
+              >
+                {planStatus === 'loading' ? 'Planning…' : '📚 Study Plan'}
+              </motion.button>
+
+              <motion.button
+                onClick={generateBrief}
+                disabled={briefStatus === 'loading'}
+                className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50"
+                whileTap={{ scale: 0.95 }}
+              >
+                {briefStatus === 'loading' ? 'Generating…' : '✨ Daily Brief'}
+              </motion.button>
+
+              <motion.button
                 onClick={clearDay}
                 className="text-[11px] text-ink-faint hover:text-ink-soft transition-colors ml-1"
                 whileTap={{ scale: 0.95 }}
@@ -383,6 +457,78 @@ export default function DailyPlanner() {
           <div className="px-4 sm:px-9 py-3 border-b" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
             <ProgressBar done={doneCount} total={totalCount} />
           </div>
+
+          {/* ── Daily Brief Panel ── */}
+          <AnimatePresence>
+            {briefStatus === 'done' && brief && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="mx-4 sm:mx-9 my-5 rounded-[16px] p-5 border border-petal-light"
+                  style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+                >
+                  <p className="text-[10px] font-semibold tracking-[3px] uppercase text-petal mb-3">✨ Your Daily Brief</p>
+                  <p className="font-cormorant text-[16px] text-ink-mid leading-relaxed whitespace-pre-wrap">{brief}</p>
+                  <div className="flex items-center gap-3 mt-4">
+                    <motion.button
+                      onClick={saveBriefToNotes}
+                      className="text-[11px] font-semibold tracking-wide uppercase px-4 py-1.5 rounded-full bg-petal-deep text-white hover:bg-petal transition-colors"
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Save to Notes
+                    </motion.button>
+                    {briefSaved && <span className="text-[11px] font-semibold text-petal-deep">✓ Saved</span>}
+                    <button onClick={() => setBriefStatus('idle')} className="text-[11px] text-ink-faint hover:text-ink-soft transition-colors">
+                      Dismiss
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            {briefStatus === 'error' && (
+              <motion.p
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="px-4 sm:px-9 py-2 text-[12px] text-red-400"
+              >
+                Could not generate brief — check your OPENAI_API_KEY and try again.
+              </motion.p>
+            )}
+          </AnimatePresence>
+
+          {/* ── Study Plan Panel ── */}
+          <AnimatePresence>
+            {(planStatus === 'done' || planStatus === 'error') && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
+                className="overflow-hidden"
+              >
+                <div
+                  className="mx-4 sm:mx-9 my-5 rounded-[16px] p-5 border border-petal-light"
+                  style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+                >
+                  {planStatus === 'done' ? (
+                    <>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] font-semibold tracking-[3px] uppercase text-petal">📚 5-Day Study Plan</p>
+                        <button onClick={() => setPlanStatus('idle')} className="text-[11px] text-ink-faint hover:text-ink-soft transition-colors">Dismiss</button>
+                      </div>
+                      <p className="font-cormorant text-[16px] text-ink-mid leading-relaxed whitespace-pre-wrap">{studyPlan}</p>
+                    </>
+                  ) : (
+                    <p className="text-[12px] text-red-400">Could not generate study plan — check your OPENAI_API_KEY and try again.</p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* ── Two-col body ── */}
           <AnimatePresence mode="wait">

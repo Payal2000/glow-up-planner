@@ -182,7 +182,7 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
   // Pad to full rows
   while (cells.length % 7 !== 0) cells.push(null)
 
-  const selectedDateObj = new Date(selected + 'T00:00:00')
+  const selectedDateObj = new Date(selected + 'T12:00:00')
   const selectedLabel = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   return (
@@ -283,7 +283,7 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
               <p className="text-[11px] font-semibold uppercase tracking-[1.5px] text-ink-faint mb-1">
                 Notes for
               </p>
-              <h4 className="font-playfair text-[16px] sm:text-[18px] text-ink-dark mb-4">
+              <h4 className="font-playfair text-[16px] sm:text-[18px] text-ink-dark mb-4" suppressHydrationWarning>
                 {selectedLabel}
               </h4>
 
