@@ -1,4 +1,4 @@
-# Glow-Up Planner
+# Ai Planner
 
 A personal productivity and wellness planner built for women doing a serious glow-up — tracking career goals, daily habits, job applications, fitness, finances, and more. Powered by Next.js, Supabase, and OpenAI.
 
