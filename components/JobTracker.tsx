@@ -54,7 +54,7 @@ function rowToApp(row: DbRow): Application {
 }
 
 const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
-  Applying:     { bg: '#e0f2fe', text: '#0369a1' },
+  Applying:     { bg: '#dcfce7', text: '#15803d' },
   Applied:      { bg: '#dbeafe', text: '#3b6fa0' },
   Interviewing: { bg: '#fef3c7', text: '#92670a' },
   Offer:        { bg: '#ede9fe', text: '#7c3aed' },
@@ -63,7 +63,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
 }
 
 const STATUS_BAR: Record<string, string> = {
-  Applying:     '#38bdf8',
+  Applying:     '#22c55e',
   Applied:      '#3b82f6',
   Interviewing: '#f59e0b',
   Offer:        '#8b5cf6',
@@ -612,7 +612,7 @@ function StatusSelect({ value, onChange }: { value: Status; onChange: (v: Status
   const [open, setOpen] = useState(false)
   const [pos, setPos] = useState({ top: 0, left: 0, flipUp: false })
   const btnRef = useRef<HTMLButtonElement>(null)
-  const statuses: Status[] = ['Applied', 'Interviewing', 'Offer', 'Rejected', 'Withdrawn']
+  const statuses: Status[] = ['Applying', 'Applied', 'Interviewing', 'Offer', 'Rejected', 'Withdrawn']
   const colors = STATUS_COLORS[value as string] ?? { bg: '#f3f4f6', text: '#9c7e7e' }
   const DROPDOWN_H = 220
 
