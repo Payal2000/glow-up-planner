@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 
 const tags = [
   '💗 Agendas & Planning',
-  '✨ Wellness & Self-Care',
+  'Wellness & Self-Care',
   '🎯 Goals & Life Design',
   '💪 Fitness & Glow-Up',
   '🥗 Meals & Lifestyle',
@@ -38,12 +38,20 @@ export default function Hero() {
         transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
       />
 
+      {/* Decorative icons */}
+      <motion.img
+        src="/icons/flower.png" alt=""
+        {...fadeDown(0)}
+        className="w-20 h-20 object-contain mb-4 relative z-10 drop-shadow-sm"
+      />
+
       {/* Ribbon */}
       <motion.span
-        {...fadeDown(0)}
-        className="font-dm text-[11px] font-semibold tracking-[4px] uppercase text-petal-deep bg-white/60 backdrop-blur-[10px] px-7 py-2.5 rounded-full mb-8 relative z-10"
+        {...fadeDown(0.05)}
+        className="font-dm text-[11px] font-semibold tracking-[4px] uppercase text-petal-deep bg-white/60 backdrop-blur-[10px] px-7 py-2.5 rounded-full mb-8 relative z-10 flex items-center gap-2"
       >
-        🎀 Your 2026 Glow-Up Starts Here
+        <img src="/icons/button.png" alt="" className="w-4 h-4 object-contain" />
+        Your 2026 Glow-Up Starts Here
       </motion.span>
 
       {/* Headline */}
