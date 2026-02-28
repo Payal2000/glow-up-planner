@@ -6,7 +6,7 @@ import FadeInView from './ui/FadeInView'
 
 const features = [
   { color: 'rose' as const, emoji: '🌸', desc: 'Aesthetic, feminine, motivating design' },
-  { color: 'lavender' as const, emoji: '✨', desc: 'Fully customizable to your lifestyle' },
+  { color: 'lavender' as const, emoji: '🌟', desc: 'Fully customizable to your lifestyle' },
   { color: 'sage' as const, emoji: '🎯', desc: 'Perfect for your 2026 glow-up journey' },
   { color: 'peach' as const, emoji: '📋', desc: 'Clear instructions included' },
   { color: 'gold' as const, emoji: '⚡', desc: 'Instantly available and easy to duplicate' },
@@ -15,7 +15,7 @@ const features = [
 
 const gradients: Record<string, string> = {
   rose: 'linear-gradient(90deg, #e8a0b4, #f5d5de)',
-  lavender: 'linear-gradient(90deg, #c9b8e8, #ede5f7)',
+  lavender: 'linear-gradient(90deg, #f5b8c8, #fce8ef)',
   sage: 'linear-gradient(90deg, #b8c9a3, #e3ecd8)',
   peach: 'linear-gradient(90deg, #f5c4a1, #fce8d5)',
   gold: 'linear-gradient(90deg, #e0c88a, #f5ecd0)',
@@ -36,7 +36,7 @@ export default function WhyLoveIt() {
           {features.map((f, i) => (
             <motion.div
               key={f.emoji}
-              className="bg-white rounded-[20px] overflow-hidden shadow-soft text-center"
+              className="bg-[#fffcf8] rounded-[20px] overflow-hidden shadow-soft text-center"
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}

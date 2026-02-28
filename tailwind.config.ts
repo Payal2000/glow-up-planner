@@ -36,8 +36,8 @@ const config: Config = {
           light: '#e3ecd8',
         },
         lavender: {
-          DEFAULT: '#c9b8e8',
-          light: '#ede5f7',
+          DEFAULT: '#f5b8c8',
+          light: '#fce8ef',
         },
         peach: {
           DEFAULT: '#f5c4a1',

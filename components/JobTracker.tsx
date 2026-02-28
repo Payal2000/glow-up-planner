@@ -57,7 +57,7 @@ const STATUS_COLORS: Record<string, { bg: string; text: string }> = {
   Applying:     { bg: '#dcfce7', text: '#15803d' },
   Applied:      { bg: '#dbeafe', text: '#3b6fa0' },
   Interviewing: { bg: '#fef3c7', text: '#92670a' },
-  Offer:        { bg: '#ede9fe', text: '#7c3aed' },
+  Offer:        { bg: '#fce8ef', text: '#c0516a' },
   Rejected:     { bg: '#fce7f3', text: '#be185d' },
   Withdrawn:    { bg: '#f3f4f6', text: '#6b7280' },
 }
@@ -66,7 +66,7 @@ const STATUS_BAR: Record<string, string> = {
   Applying:     '#22c55e',
   Applied:      '#3b82f6',
   Interviewing: '#f59e0b',
-  Offer:        '#8b5cf6',
+  Offer:        '#e8a0b4',
   Rejected:     '#ec4899',
   Withdrawn:    '#9ca3af',
 }
@@ -76,7 +76,7 @@ const ACTION_COLORS: Record<string, { bg: string; text: string }> = {
   'Follow up':         { bg: '#d1fae5', text: '#065f46' },
   'Send email':        { bg: '#fce7f3', text: '#be185d' },
   'Waiting':           { bg: '#fef3c7', text: '#92670a' },
-  'Decide':            { bg: '#ede9fe', text: '#7c3aed' },
+  'Decide':            { bg: '#fce8ef', text: '#c0516a' },
 }
 
 const today = () => new Date().toISOString().split('T')[0]
@@ -274,14 +274,14 @@ export default function JobTracker() {
   return (
     <section className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="weekly">
       <SectionHeader
-        icon="💼"
+        iconSrc="/icons/books.png"
         label="Career"
         title="Job Tracker"
         subtitle="Track every application, interview, and offer in one place."
       />
 
       <FadeInView delay={0.1}>
-        <div className="bg-white rounded-[20px] shadow-card overflow-hidden">
+        <div className="bg-[#fffcf8] rounded-[20px] shadow-card overflow-hidden">
 
           {/* ── Header bar ── */}
           <div
@@ -301,7 +301,7 @@ export default function JobTracker() {
                     onClick={() => setActiveTab(tab)}
                     className={`text-[11px] font-semibold tracking-wider uppercase px-3 py-1 rounded-full transition-colors ${
                       activeTab === tab
-                        ? 'bg-white text-petal-deep shadow-sm'
+                        ? 'bg-[#fffcf8] text-petal-deep shadow-sm'
                         : 'text-ink-soft hover:text-ink-mid'
                     }`}
                     whileTap={{ scale: 0.95 }}
@@ -386,7 +386,7 @@ export default function JobTracker() {
                                   >
                                     {draft?.status === 'loading' ? '…' : '✍️'}
                                   </motion.button>
-                                  <button onClick={() => deleteRow(app.id)} className="text-ink-faint hover:text-red-400 transition-all text-[13px] w-6 h-6 flex items-center justify-center rounded-full hover:bg-red-50">✕</button>
+                                  <button onClick={() => deleteRow(app.id)} title="Delete" className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors opacity-50 hover:opacity-100"><img src="/icons/dustbin.png" alt="delete" className="w-4 h-4 object-contain" /></button>
                                 </div>
                               </td>
                             </motion.tr>
@@ -403,7 +403,7 @@ export default function JobTracker() {
                                       transition={{ duration: 0.3, ease: 'easeOut' }}
                                       className="overflow-hidden"
                                     >
-                                      <div className="mx-4 my-2 rounded-2xl p-4 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}>
+                                      <div className="mx-4 my-2 rounded-2xl p-4 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}>
                                         <div className="flex items-center justify-between mb-2">
                                           <p className="text-[10px] font-semibold tracking-[3px] uppercase text-petal">✍️ Cold Outreach Draft — {app.company}</p>
                                           <div className="flex items-center gap-3">
@@ -457,7 +457,7 @@ export default function JobTracker() {
                         <div className="flex items-center gap-2 shrink-0 pt-0.5">
                           <StatusSelect value={app.status} onChange={v => update(app.id, 'status', v)} />
                           <button onClick={() => draftOutreach(app)} title="Draft outreach" className="text-petal-deep text-[14px] w-5 h-5 flex items-center justify-center">✍️</button>
-                          <button onClick={() => deleteRow(app.id)} className="text-ink-faint hover:text-red-400 text-[12px] w-5 h-5 flex items-center justify-center">✕</button>
+                          <button onClick={() => deleteRow(app.id)} title="Delete" className="w-5 h-5 flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"><img src="/icons/dustbin.png" alt="delete" className="w-4 h-4 object-contain" /></button>
                         </div>
                       </div>
                       <NextActionSelect actions={app.nextActions} onChange={a => toggleAction(app.id, a)} />
@@ -476,7 +476,7 @@ export default function JobTracker() {
                             transition={{ duration: 0.3 }}
                             className="overflow-hidden"
                           >
-                            <div className="mt-2 rounded-2xl p-3 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}>
+                            <div className="mt-2 rounded-2xl p-3 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}>
                               <p className="text-[10px] font-semibold tracking-[2px] uppercase text-petal mb-2">✍️ Outreach Draft</p>
                               <p className="font-cormorant text-[14px] text-ink-mid leading-relaxed mb-2">{outreach[app.id].message}</p>
                               <div className="flex gap-3">
@@ -495,7 +495,7 @@ export default function JobTracker() {
                 <div className="px-5 sm:px-7 py-4 border-t flex items-center justify-between gap-3" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
                   <div className="flex items-center gap-4 text-[11px] text-ink-faint">
                     <span>COUNT {apps.length}</span>
-                    {offerCount > 0 && <span className="text-[#7c3aed] font-semibold">🎉 {offerCount} Offer{offerCount > 1 ? 's' : ''}</span>}
+                    {offerCount > 0 && <span className="text-[#c0516a] font-semibold">🎉 {offerCount} Offer{offerCount > 1 ? 's' : ''}</span>}
                     {apps.filter(a => a.status === 'Interviewing').length > 0 && (
                       <span className="text-[#92670a] font-semibold">📅 {apps.filter(a => a.status === 'Interviewing').length} Interview{apps.filter(a => a.status === 'Interviewing').length > 1 ? 's' : ''}</span>
                     )}
@@ -533,7 +533,7 @@ export default function JobTracker() {
                       {[
                         { label: 'Total Applied', value: totalApps,        color: '#c77d94', bg: '#fdf0f4' },
                         { label: 'Interviewing',  value: statusCounts['Interviewing'] ?? 0, color: '#92670a', bg: '#fef3c7' },
-                        { label: 'Offers',        value: statusCounts['Offer'] ?? 0,        color: '#7c3aed', bg: '#ede9fe' },
+                        { label: 'Offers',        value: statusCounts['Offer'] ?? 0,        color: '#c0516a', bg: '#fce8ef' },
                         { label: 'Response Rate', value: `${responseRate}%`,                color: '#3b6fa0', bg: '#dbeafe' },
                       ].map((card, i) => (
                         <motion.div key={card.label} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: i * 0.06 }} className="rounded-2xl p-4" style={{ background: card.bg }}>
@@ -640,7 +640,7 @@ function StatusSelect({ value, onChange }: { value: Status; onChange: (v: Status
               exit={{ opacity: 0, y: pos.flipUp ? 4 : -4, scale: 0.97 }}
               transition={{ duration: 0.12 }}
               style={{ position: 'fixed', top: pos.top, left: pos.left, zIndex: 101 }}
-              className="bg-white rounded-2xl shadow-xl border border-petal-light p-1.5 min-w-[150px]"
+              className="bg-[#fffcf8] rounded-2xl shadow-xl border border-petal-light p-1.5 min-w-[150px]"
             >
               {statuses.map(s => {
                 const c = STATUS_COLORS[s]
@@ -680,7 +680,7 @@ function NextActionSelect({ actions, onChange }: { actions: NextAction[]; onChan
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
               transition={{ duration: 0.12 }}
-              className="absolute top-full left-0 mt-1.5 z-20 bg-white rounded-2xl shadow-lg border border-petal-light p-1.5 min-w-[180px]"
+              className="absolute top-full left-0 mt-1.5 z-20 bg-[#fffcf8] rounded-2xl shadow-lg border border-petal-light p-1.5 min-w-[180px]"
             >
               {allActions.map(a => {
                 const c = ACTION_COLORS[a]

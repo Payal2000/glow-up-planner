@@ -155,12 +155,12 @@ export default function HabitTracker() {
   }
 
   const addHabit = () => {
-    const newList = [...habitList, '✨ New Habit']
+    const newList = [...habitList, 'New Habit']
     setHabitList(newList)
     persistHabitList(newList)
     // Start editing the new one
     setEditingIdx(newList.length - 1)
-    setEditValue('✨ New Habit')
+    setEditValue('New Habit')
     setTimeout(() => inputRef.current?.select(), 50)
   }
 
@@ -252,15 +252,15 @@ export default function HabitTracker() {
 
   return (
     <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="habits">
-      <SectionHeader icon="✅" label="Stay Consistent" title="Habit Tracker" subtitle="Small daily actions compound into massive results." />
+      <SectionHeader iconSrc="/icons/ribbon.png" label="Stay Consistent" title="Habit Tracker" subtitle="Small daily actions compound into massive results." />
 
       <FadeInView delay={0.1}>
-        <div className="bg-white rounded-[20px] shadow-card overflow-hidden">
+        <div className="bg-[#fffcf8] rounded-[20px] shadow-card overflow-hidden">
 
           {/* ── Header ── */}
           <div
             className="px-4 sm:px-9 py-5 sm:py-7 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 flex-wrap"
-            style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+            style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}
           >
             <div>
               <h3 className="font-playfair text-2xl text-ink-dark mb-1">This Week&apos;s Habits</h3>
@@ -281,16 +281,16 @@ export default function HabitTracker() {
               </AnimatePresence>
 
               {selected.size > 0 && (
-                <motion.button onClick={clearAll} className="text-[11px] font-semibold tracking-wider uppercase text-ink-soft bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors" whileTap={{ scale: 0.95 }}>
+                <motion.button onClick={clearAll} className="text-[11px] font-semibold tracking-wider uppercase text-ink-soft bg-white/70 hover:bg-[#fffcf8] px-3.5 py-1.5 rounded-full transition-colors" whileTap={{ scale: 0.95 }}>
                   Clear All
                 </motion.button>
               )}
 
-              <motion.button onClick={analyseHabits} disabled={analysisStatus === 'loading' || loading} className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50" whileTap={{ scale: 0.95 }}>
+              <motion.button onClick={analyseHabits} disabled={analysisStatus === 'loading' || loading} className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-[#fffcf8] px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50" whileTap={{ scale: 0.95 }}>
                 {analysisStatus === 'loading' ? 'Analysing…' : '🔍 Analyse'}
               </motion.button>
 
-              <motion.button onClick={generateWrap} disabled={wrapStatus === 'loading'} className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50" whileTap={{ scale: 0.95 }}>
+              <motion.button onClick={generateWrap} disabled={wrapStatus === 'loading'} className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-[#fffcf8] px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50" whileTap={{ scale: 0.95 }}>
                 {wrapStatus === 'loading' ? 'Writing…' : '📝 Weekly Wrap'}
               </motion.button>
             </div>
@@ -362,8 +362,8 @@ export default function HabitTracker() {
                           <button
                             onClick={() => removeHabit(hi)}
                             title="Remove habit"
-                            className="text-[11px] text-ink-faint hover:text-red-400 w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors"
-                          >✕</button>
+                            className="w-5 h-5 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors opacity-40 hover:opacity-100"
+                          ><img src="/icons/dustbin.png" alt="remove" className="w-4 h-4 object-contain" /></button>
                         </div>
                       </td>
                     </motion.tr>
@@ -394,7 +394,7 @@ export default function HabitTracker() {
                       {completedForHabit(habit) > 0 && (
                         <button onClick={() => clearHabitRow(habit)} className="text-[11px] text-ink-faint hover:text-petal-deep w-6 h-6 flex items-center justify-center rounded-full hover:bg-petal-pale transition-colors">↺</button>
                       )}
-                      <button onClick={() => removeHabit(hi)} className="text-[11px] text-ink-faint hover:text-red-400 w-6 h-6 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors">✕</button>
+                      <button onClick={() => removeHabit(hi)} title="Remove habit" className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-red-50 transition-colors opacity-40 hover:opacity-100"><img src="/icons/dustbin.png" alt="remove" className="w-4 h-4 object-contain" /></button>
                     </div>
                   </div>
                   <div className="grid grid-cols-7 gap-1.5">
@@ -422,7 +422,7 @@ export default function HabitTracker() {
             <AnimatePresence>
               {(analysisStatus === 'done' || analysisStatus === 'error') && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: 'easeOut' }} className="overflow-hidden">
-                  <div className="mt-6 rounded-[16px] p-5 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}>
+                  <div className="mt-6 rounded-[16px] p-5 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}>
                     {analysisStatus === 'done' ? (
                       <>
                         <div className="flex items-center justify-between mb-3">
@@ -443,7 +443,7 @@ export default function HabitTracker() {
             <AnimatePresence>
               {(wrapStatus === 'done' || wrapStatus === 'error') && (
                 <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.35, ease: 'easeOut' }} className="overflow-hidden">
-                  <div className="mt-4 rounded-[16px] p-5 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}>
+                  <div className="mt-4 rounded-[16px] p-5 border border-petal-light" style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}>
                     {wrapStatus === 'done' ? (
                       <>
                         <div className="flex items-center justify-between mb-3">

@@ -27,12 +27,12 @@ interface DayData {
 
 const defaultData = (): DayData => ({
   intention:    '',
-  priorities:   Array.from({ length: 3 }, () => ({ text: '', done: false })),
-  leetcode:     Array.from({ length: 5 }, () => ({ text: '', done: false })),
+  priorities:   [{ text: '', done: false }],
+  leetcode:     [{ text: '', done: false }],
   studyNotes:   '',
   buildLog:     '',
-  outreach:     Array.from({ length: 3 }, () => ({ text: '', done: false })),
-  applications: Array.from({ length: 5 }, () => ({ company: '', role: '', done: false })),
+  outreach:     [{ text: '', done: false }],
+  applications: [{ company: '', role: '', done: false }],
   reflection:   '',
 })
 
@@ -376,19 +376,19 @@ export default function DailyPlanner() {
   return (
     <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="daily">
       <SectionHeader
-        icon="📝"
+        iconSrc="/icons/coffee.png"
         label="Plan Your Day"
         title="Daily Planner"
         subtitle="Your daily blueprint for getting things done beautifully."
       />
 
       <FadeInView delay={0.1}>
-        <div className="bg-white rounded-[20px] shadow-card overflow-hidden">
+        <div className="bg-[#fffcf8] rounded-[20px] shadow-card overflow-hidden">
 
           {/* ── Header ── */}
           <div
             className="px-4 sm:px-9 py-5 sm:py-7 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 flex-wrap"
-            style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+            style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}
           >
             <div>
               <h3 className="font-playfair text-2xl text-ink-dark mb-1">Today&apos;s Plan</h3>
@@ -399,7 +399,7 @@ export default function DailyPlanner() {
               {/* Date nav */}
               <motion.button
                 onClick={() => setDate(addDays(date, -1))}
-                className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-ink-mid hover:bg-white transition-colors text-sm"
+                className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-ink-mid hover:bg-[#fffcf8] transition-colors text-sm"
                 whileTap={{ scale: 0.9 }}
               >
                 ‹
@@ -408,7 +408,7 @@ export default function DailyPlanner() {
               {!isToday(date) && (
                 <motion.button
                   onClick={() => setDate(new Date())}
-                  className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors"
+                  className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-[#fffcf8] px-3.5 py-1.5 rounded-full transition-colors"
                   whileTap={{ scale: 0.95 }}
                 >
                   Today
@@ -417,7 +417,7 @@ export default function DailyPlanner() {
 
               <motion.button
                 onClick={() => setDate(addDays(date, 1))}
-                className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-ink-mid hover:bg-white transition-colors text-sm"
+                className="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-ink-mid hover:bg-[#fffcf8] transition-colors text-sm"
                 whileTap={{ scale: 0.9 }}
               >
                 ›
@@ -428,7 +428,7 @@ export default function DailyPlanner() {
               <motion.button
                 onClick={generateStudyPlan}
                 disabled={planStatus === 'loading'}
-                className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50"
+                className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-[#fffcf8] px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50"
                 whileTap={{ scale: 0.95 }}
               >
                 {planStatus === 'loading' ? 'Planning…' : '📚 Study Plan'}
@@ -437,10 +437,10 @@ export default function DailyPlanner() {
               <motion.button
                 onClick={generateBrief}
                 disabled={briefStatus === 'loading'}
-                className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-white px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50"
+                className="text-[11px] font-semibold tracking-wider uppercase text-petal-deep bg-white/70 hover:bg-[#fffcf8] px-3.5 py-1.5 rounded-full transition-colors disabled:opacity-50"
                 whileTap={{ scale: 0.95 }}
               >
-                {briefStatus === 'loading' ? 'Generating…' : '✨ Daily Brief'}
+                {briefStatus === 'loading' ? 'Generating…' : <><img src="/icons/sparkle.png" alt="" className="inline w-3.5 h-3.5 object-contain mr-1" />Daily Brief</>}
               </motion.button>
 
               <motion.button
@@ -470,9 +470,9 @@ export default function DailyPlanner() {
               >
                 <div
                   className="mx-4 sm:mx-9 my-5 rounded-[16px] p-5 border border-petal-light"
-                  style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+                  style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}
                 >
-                  <p className="text-[10px] font-semibold tracking-[3px] uppercase text-petal mb-3">✨ Your Daily Brief</p>
+                  <p className="text-[10px] font-semibold tracking-[3px] uppercase text-petal mb-3 flex items-center gap-1.5"><img src="/icons/sparkle.png" alt="" className="w-3.5 h-3.5 object-contain" />Your Daily Brief</p>
                   <p className="font-cormorant text-[16px] text-ink-mid leading-relaxed whitespace-pre-wrap">{brief}</p>
                   <div className="flex items-center gap-3 mt-4">
                     <motion.button
@@ -512,7 +512,7 @@ export default function DailyPlanner() {
               >
                 <div
                   className="mx-4 sm:mx-9 my-5 rounded-[16px] p-5 border border-petal-light"
-                  style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+                  style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}
                 >
                   {planStatus === 'done' ? (
                     <>

@@ -46,7 +46,7 @@ export default function GoalsSection() {
 
   return (
     <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="goals">
-      <SectionHeader icon="🎯" label="Dream Big, Plan Smart" title="Goals & Life Design" subtitle="Track your glow-up across every area of life." />
+      <SectionHeader iconSrc="/icons/green-ribbon.png" label="Dream Big, Plan Smart" title="Goals & Life Design" subtitle="Track your glow-up across every area of life." />
       {saved && <p className="text-[11px] text-petal-deep font-semibold mb-4 text-right">✓ Saved</p>}
 
       <FadeInView delay={0.1}>
