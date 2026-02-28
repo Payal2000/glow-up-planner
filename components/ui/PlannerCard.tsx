@@ -7,7 +7,7 @@ type CardColor = 'rose' | 'sage' | 'lavender' | 'peach' | 'sky' | 'gold' | 'latt
 const gradients: Record<CardColor, string> = {
   rose: 'linear-gradient(90deg, #e8a0b4, #f5d5de)',
   sage: 'linear-gradient(90deg, #b8c9a3, #e3ecd8)',
-  lavender: 'linear-gradient(90deg, #c9b8e8, #ede5f7)',
+  lavender: 'linear-gradient(90deg, #f5b8c8, #fce8ef)',
   peach: 'linear-gradient(90deg, #f5c4a1, #fce8d5)',
   sky: 'linear-gradient(90deg, #a8c8e0, #daeaf5)',
   gold: 'linear-gradient(90deg, #e0c88a, #f5ecd0)',
@@ -17,7 +17,7 @@ const gradients: Record<CardColor, string> = {
 const dotColors: Record<CardColor, string> = {
   rose: '#e8a0b4',
   sage: '#b8c9a3',
-  lavender: '#c9b8e8',
+  lavender: '#f5b8c8',
   peach: '#f5c4a1',
   sky: '#a8c8e0',
   gold: '#e0c88a',
@@ -36,7 +36,7 @@ interface PlannerCardProps {
 export default function PlannerCard({ color, title, desc, children, className = '', style }: PlannerCardProps) {
   return (
     <motion.div
-      className={`bg-white rounded-[20px] pt-0 overflow-hidden shadow-soft relative ${className}`}
+      className={`bg-[#f0e8e0] rounded-[20px] pt-0 overflow-hidden shadow-soft relative ${className}`}
       style={style}
       whileHover={{ y: -6, boxShadow: '0 8px 40px rgba(200,160,170,0.22)' }}
       transition={{ duration: 0.3, ease: 'easeOut' }}

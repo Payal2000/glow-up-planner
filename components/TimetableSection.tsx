@@ -37,7 +37,7 @@ const defaultSchedule: Block[] = [
 const dotColors: Record<string, string> = {
   workout: '#b8c9a3',
   outreach: '#e8a0b4',
-  leetcode: '#c9b8e8',
+  leetcode: '#f5b8c8',
   study: '#a8c8e0',
   build: '#f5c4a1',
   apply: '#e0c88a',
@@ -187,11 +187,11 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
   const selectedLabel = selectedDateObj.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
 
   return (
-    <div className="bg-white rounded-[20px] shadow-card overflow-hidden">
+    <div className="bg-[#fffcf8] rounded-[20px] shadow-card overflow-hidden">
       {/* Header */}
       <div
         className="px-4 sm:px-9 py-5 sm:py-6 border-b"
-        style={{ background: 'linear-gradient(135deg, #f0eafb 0%, #fdf0f4 100%)', borderColor: 'rgba(201,184,232,0.2)' }}
+        style={{ background: 'linear-gradient(135deg, #fce8ef 0%, #fdf0f4 100%)', borderColor: 'rgba(232,160,180,0.2)' }}
       >
         <h3 className="font-playfair text-[18px] sm:text-[22px] text-ink-dark mb-1">
           Calendar & Daily Notes
@@ -203,7 +203,7 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
 
       <div className="flex flex-col">
         {/* ── Calendar grid ── */}
-        <div className="px-5 py-5 border-b" style={{ borderColor: 'rgba(201,184,232,0.15)' }}>
+        <div className="px-5 py-5 border-b" style={{ borderColor: 'rgba(232,160,180,0.15)' }}>
           {/* Month nav */}
           <div className="flex items-center justify-between mb-4">
             <button onClick={prevMonth} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-petal-pale text-ink-mid transition">
@@ -243,11 +243,11 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
                     setSelectedDate(new Date(key + 'T00:00:00'))
                   }}
                   className={`relative mx-auto flex flex-col items-center justify-center w-9 h-9 rounded-full text-[13px] font-medium transition-all
-                    ${isSelected ? 'bg-[#c9b8e8] text-white shadow-md' : isToday ? 'bg-[#fdf0f4] text-[#9b7ecc] font-bold ring-2 ring-[#c9b8e8]/50' : 'text-ink-mid hover:bg-petal-pale'}`}
+                    ${isSelected ? 'bg-[#f5b8c8] text-white shadow-md' : isToday ? 'bg-[#fdf0f4] text-[#c0516a] font-bold ring-2 ring-[#f5b8c8]/50' : 'text-ink-mid hover:bg-petal-pale'}`}
                 >
                   {day}
                   {hasNote && !isSelected && (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#c9b8e8]" />
+                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#f5b8c8]" />
                   )}
                 </button>
               )
@@ -257,15 +257,15 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
           {/* Legend */}
           <div className="mt-4 flex items-center gap-4 text-[11px] text-ink-faint">
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-[#fdf0f4] ring-2 ring-[#c9b8e8]/50 inline-block" />
+              <span className="w-3 h-3 rounded-full bg-[#fdf0f4] ring-2 ring-[#f5b8c8]/50 inline-block" />
               Today
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-full bg-[#c9b8e8] inline-block" />
+              <span className="w-3 h-3 rounded-full bg-[#f5b8c8] inline-block" />
               Selected
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-[#c9b8e8] inline-block" />
+              <span className="w-2 h-2 rounded-full bg-[#f5b8c8] inline-block" />
               Has note
             </span>
           </div>
@@ -301,7 +301,7 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
                 <motion.button
                   onClick={saveNote}
                   disabled={!isAuthed || saving}
-                  className="text-[12px] font-semibold tracking-wide uppercase px-5 py-2 rounded-full bg-[#c9b8e8] text-white hover:bg-[#b8a4d8] disabled:opacity-50 transition"
+                  className="text-[12px] font-semibold tracking-wide uppercase px-5 py-2 rounded-full bg-[#f5b8c8] text-white hover:bg-[#d4849a] disabled:opacity-50 transition"
                   whileTap={{ scale: 0.95 }}
                 >
                   {saving ? 'Saving…' : 'Save Note'}
@@ -310,7 +310,7 @@ function CalendarWidget({ isAuthed }: { isAuthed: boolean }) {
                   <motion.span
                     initial={{ opacity: 0, y: 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="text-[11px] font-semibold text-[#9b7ecc]"
+                    className="text-[11px] font-semibold text-[#c0516a]"
                   >
                     ✓ Saved
                   </motion.span>
@@ -433,7 +433,7 @@ export default function TimetableSection() {
   return (
     <section className="max-w-[1400px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="timetable">
       <SectionHeader
-        icon="⏰"
+        iconSrc="/icons/clock.png"
         label="Research-Backed"
         title="Your Optimized Timetable"
         subtitle="Every block is placed at the time science says your brain and body perform best."
@@ -447,7 +447,7 @@ export default function TimetableSection() {
       </FadeInView>
 
       <FadeInView delay={0.1} className="flex-1 min-w-0 lg:self-stretch">
-        <div className="bg-white rounded-[20px] shadow-card flex flex-col h-full">
+        <div className="bg-[#fffcf8] rounded-[20px] shadow-card flex flex-col h-full overflow-hidden">
           <div
             className="px-4 sm:px-9 py-5 sm:py-[30px] border-b"
             style={{ background: 'linear-gradient(135deg, #fdf0f4 0%, #f9e4eb 100%)', borderColor: 'rgba(232,160,180,0.15)' }}
@@ -459,7 +459,7 @@ export default function TimetableSection() {
               <motion.button
                 onClick={clearBlockContent}
                 title="Clear all content"
-                className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-petal-light text-ink-faint hover:text-red-400 hover:border-red-200 bg-white transition-colors"
+                className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full border border-petal-light text-ink-faint hover:text-red-400 hover:border-red-200 bg-[#fffcf8] transition-colors"
                 whileTap={{ scale: 0.9 }}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -568,7 +568,7 @@ export default function TimetableSection() {
                             <select
                               value={row.type}
                               onChange={(e) => updateBlock(i, 'type', e.target.value as BlockType)}
-                              className="flex-1 rounded-lg border border-petal-light bg-white px-2 py-2 text-[12px] focus:border-petal outline-none"
+                              className="flex-1 rounded-lg border border-petal-light bg-[#fffcf8] px-2 py-2 text-[12px] focus:border-petal outline-none"
                             >
                               {typeOptions.map((opt) => (
                                 <option key={opt.value} value={opt.value}>

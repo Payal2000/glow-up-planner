@@ -9,7 +9,7 @@
 ::-webkit-scrollbar-thumb:hover { background: #e8a0b4; }
 
 /* Smooth scroll + base font scale */
-html { scroll-behavior: smooth; font-size: 18px; }
+html { scroll-behavior: smooth; font-size: 20px; }
 
 /* Editable cells */
 .editable-cell {

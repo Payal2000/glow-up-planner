@@ -50,7 +50,7 @@ export default function FitnessSection() {
 
   return (
     <section className="max-w-[1100px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="fitness">
-      <SectionHeader icon="💪" label="Move Your Body" title="Fitness & Glow-Up" subtitle="45 min daily — 15 min fasted AM + 30 min PM strength." />
+      <SectionHeader iconSrc="/icons/headphones.png" label="Move Your Body" title="Fitness & Glow-Up" subtitle="45 min daily — 15 min fasted AM + 30 min PM strength." />
       {saved && <p className="text-[11px] text-petal-deep font-semibold mb-4 text-right">✓ Saved</p>}
       <FadeInView delay={0.1}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">

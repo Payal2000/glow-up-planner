@@ -334,15 +334,15 @@ export default function MealsSection() {
   // ── Render ────────────────────────────────────────────────────────────────
   return (
     <section className="max-w-[1300px] mx-auto px-4 sm:px-6 py-8 sm:py-12" id="meals">
-      <SectionHeader icon="🥗" label="Nourish Your Body" title="Meals & Lifestyle" subtitle="Track your daily nutrition." />
+      <SectionHeader iconSrc="/icons/diet.png" label="Nourish Your Body" title="Meals & Lifestyle" subtitle="Track your daily nutrition." />
 
       <FadeInView delay={0.1}>
-        <div className="bg-white rounded-[20px] shadow-card overflow-hidden">
+        <div className="bg-[#fffcf8] rounded-[20px] shadow-card overflow-hidden">
 
           {/* ── Header ── */}
           <div
             className="px-6 sm:px-8 py-4 border-b flex items-center justify-between flex-wrap gap-3"
-            style={{ borderColor: 'rgba(200,160,170,0.12)', background: 'linear-gradient(135deg, #fdf5f7 0%, #fff 100%)' }}
+            style={{ borderColor: 'rgba(200,160,170,0.12)', background: 'linear-gradient(135deg, #fdf5f7 0%, #fffcf8 100%)' }}
           >
             <h2 className="font-playfair text-2xl font-bold text-petal-deep">Food Diary</h2>
             <div className="flex items-center gap-4">
@@ -393,7 +393,7 @@ export default function MealsSection() {
                   </tr>
                 )}
                 {entries.map((entry, i) => (
-                  <tr key={entry.id} style={{ background: i % 2 === 0 ? '#fdf8fa' : '#fff' }} className="group">
+                  <tr key={entry.id} style={{ background: i % 2 === 0 ? '#fdf8fa' : '#fffcf8' }} className="group">
                     <td className={`py-2 px-2 ${bd} text-center`}>
                       <select
                         value={entry.meal}
@@ -497,10 +497,10 @@ export default function MealsSection() {
                 transition={{ duration: 0.25, ease: 'easeOut' }}
                 className="overflow-hidden"
               >
-                <div className="border-t px-6 py-5 space-y-4" style={{ borderColor: 'rgba(200,160,170,0.1)', background: 'linear-gradient(135deg, #fdf5f7 0%, #fff 100%)' }}>
+                <div className="border-t px-6 py-5 space-y-4" style={{ borderColor: 'rgba(200,160,170,0.1)', background: 'linear-gradient(135deg, #fdf5f7 0%, #fffcf8 100%)' }}>
 
                   {/* Tab bar */}
-                  <div className="flex items-center bg-white rounded-full p-0.5 gap-0.5 w-fit shadow-sm border border-petal-light">
+                  <div className="flex items-center bg-[#fffcf8] rounded-full p-0.5 gap-0.5 w-fit shadow-sm border border-petal-light">
                     {([
                       { key: 'daily',    label: '📊 Daily' },
                       { key: 'weekly',   label: '📅 Weekly' },
@@ -564,7 +564,7 @@ export default function MealsSection() {
                           onChange={e => setResearchQuery(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && researchQuery && runAgent('research-food', { query: researchQuery })}
                           placeholder="e.g. Chobani Greek Yogurt, Big Mac, 100g chicken breast…"
-                          className="flex-1 text-[13px] px-4 py-2 rounded-full border border-petal-light outline-none focus:border-petal bg-white text-gray-700 placeholder:text-gray-300"
+                          className="flex-1 text-[13px] px-4 py-2 rounded-full border border-petal-light outline-none focus:border-petal bg-[#fffcf8] text-gray-700 placeholder:text-gray-300"
                         />
                         <motion.button
                           onClick={() => researchQuery && runAgent('research-food', { query: researchQuery })}
@@ -583,7 +583,7 @@ export default function MealsSection() {
                             initial={{ opacity: 0, y: 6 }}
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0 }}
-                            className="rounded-2xl border border-petal-light p-4 bg-white space-y-3"
+                            className="rounded-2xl border border-petal-light p-4 bg-[#fffcf8] space-y-3"
                           >
                             <div className="flex items-start justify-between gap-3">
                               <div>
@@ -632,7 +632,7 @@ export default function MealsSection() {
                           onChange={e => setGuidanceQ(e.target.value)}
                           onKeyDown={e => e.key === 'Enter' && guidanceQ && runAgent('guidance', { question: guidanceQ })}
                           placeholder="e.g. How many calories to lose 1lb/week? Is this enough protein?"
-                          className="flex-1 text-[13px] px-4 py-2 rounded-full border border-petal-light outline-none focus:border-petal bg-white text-gray-700 placeholder:text-gray-300"
+                          className="flex-1 text-[13px] px-4 py-2 rounded-full border border-petal-light outline-none focus:border-petal bg-[#fffcf8] text-gray-700 placeholder:text-gray-300"
                         />
                         <motion.button
                           onClick={() => guidanceQ && runAgent('guidance', { question: guidanceQ })}
@@ -653,8 +653,8 @@ export default function MealsSection() {
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0 }}
-                        className="rounded-2xl border border-petal-light p-4 bg-white"
-                        style={{ background: 'linear-gradient(135deg, #fdf0f4, #ede5f7)' }}
+                        className="rounded-2xl border border-petal-light p-4 bg-[#fffcf8]"
+                        style={{ background: 'linear-gradient(135deg, #fdf0f4, #fce8ef)' }}
                       >
                         <div className="flex items-center justify-between mb-3">
                           <p className="text-[10px] font-semibold tracking-[3px] uppercase text-petal">

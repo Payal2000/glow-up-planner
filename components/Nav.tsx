@@ -2,142 +2,206 @@
 
 import { useState, useEffect } from 'react'
 import type { MouseEvent } from 'react'
-import { motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import AuthButton from './AuthButton'
 
 const links = [
-  { href: '#timetable', label: 'Timetable' },
-  { href: '#daily', label: 'Daily Planner' },
-  { href: '#weekly', label: 'Job Tracker' },
-  { href: '#habits', label: 'Habits' },
-  { href: '#meals', label: 'Meals' },
-  { href: '#goals', label: 'Goals' },
-  { href: '#fitness', label: 'Fitness' },
+  { href: '#timetable', label: 'Timetable',    iconSrc: '/icons/clock.png' },
+  { href: '#daily',     label: 'Daily Planner', iconSrc: '/icons/coffee.png' },
+  { href: '#weekly',    label: 'Job Tracker',   iconSrc: '/icons/books.png' },
+  { href: '#habits',    label: 'Habits',        iconSrc: '/icons/ribbon.png' },
+  { href: '#meals',     label: 'Meals',         iconSrc: '/icons/diet.png' },
+  { href: '#fitness',   label: 'Fitness',       iconSrc: '/icons/headphones.png', iconClass: 'w-full h-full scale-[1.7]' },
 ]
 
-export default function Nav() {
+interface NavProps {
+  collapsed: boolean
+  onToggle: () => void
+}
+
+function SidebarLinks({
+  active,
+  onClickLink,
+  collapsed,
+}: {
+  active: string
+  onClickLink: (e: MouseEvent<HTMLAnchorElement>, href: string) => void
+  collapsed: boolean
+}
+) {
+  return (
+    <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
+      {links.map(({ href, label, iconSrc, iconClass }) => {
+        const isActive = active === href.slice(1)
+        return (
+          <motion.a
+            key={href}
+            href={href}
+            onClick={e => onClickLink(e, href)}
+            title={collapsed ? label : undefined}
+            className={`flex items-center rounded-xl no-underline transition-colors duration-200 relative ${collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-3 py-2.5'}`}
+            style={{
+              background: isActive ? 'linear-gradient(135deg, #fce8ef, #fce8ef)' : 'transparent',
+              color: isActive ? '#3d2b2b' : '#9c7e7e',
+            }}
+            whileHover={{ backgroundColor: '#fdf0f4', color: '#6b4f4f' }}
+          >
+            {isActive && (
+              <motion.div
+                layoutId="active-bg"
+                className="absolute inset-0 rounded-xl"
+                style={{ background: 'linear-gradient(135deg, #fce8ef, #fce8ef)' }}
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+              />
+            )}
+            {/* Fixed icon container — all icons same box, centred */}
+            <div className="w-10 h-10 flex items-center justify-center shrink-0 relative z-10">
+              <img src={iconSrc} alt="" className={`object-contain ${iconClass ?? 'w-full h-full'}`} />
+            </div>
+            {!collapsed && (
+              <span className="text-[15px] font-medium tracking-wide relative z-10 whitespace-nowrap">{label}</span>
+            )}
+            {!collapsed && isActive && (
+              <div className="ml-auto w-1.5 h-1.5 rounded-full bg-petal-deep relative z-10 shrink-0" />
+            )}
+          </motion.a>
+        )
+      })}
+    </nav>
+  )
+}
+
+export default function Nav({ collapsed, onToggle }: NavProps) {
   const [active, setActive] = useState('timetable')
-  const [menuOpen, setMenuOpen] = useState(false)
+  const [mobileOpen, setMobileOpen] = useState(false)
 
   useEffect(() => {
-    const sectionIds = links.map((l) => l.href.slice(1))
+    const sectionIds = links.map(l => l.href.slice(1))
     const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActive(entry.target.id)
-        })
-      },
+      entries => entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id) }),
       { rootMargin: '-40% 0px -55% 0px' }
     )
-
-    sectionIds.forEach((id) => {
-      const el = document.getElementById(id)
-      if (el) observer.observe(el)
-    })
-
+    sectionIds.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el) })
     return () => observer.disconnect()
   }, [])
-
-  const closeMenuIfMobile = () => {
-    if (typeof window !== 'undefined' && window.innerWidth < 768) {
-      setMenuOpen(false)
-    }
-  }
 
   const handleClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault()
     const target = document.querySelector(href)
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
     setActive(href.slice(1))
-    closeMenuIfMobile()
+    setMobileOpen(false)
   }
 
+  const sidebarWidth = collapsed ? 72 : 280
+
   return (
-    <nav
-      className="sticky top-0 z-50 px-4 sm:px-6 py-3.5"
-      style={{
-        background: 'rgba(254,250,248,0.85)',
-        backdropFilter: 'blur(20px)',
-        borderBottom: '1px solid rgba(232,160,180,0.15)',
-      }}
-    >
-      <div className="flex items-center justify-between gap-3">
-        <div className="hidden md:flex gap-2 flex-wrap items-center flex-1">
-          {links.map(({ href, label }) => {
-            const isActive = active === href.slice(1)
-            return (
-              <motion.a
-                key={href}
-                href={href}
-                onClick={(e) => handleClick(e, href)}
-                className="text-[12px] font-medium tracking-[1px] uppercase no-underline px-[18px] py-2 rounded-full whitespace-nowrap transition-colors duration-300"
-                style={{
-                  color: isActive ? '#3d2b2b' : '#9c7e7e',
-                  background: isActive ? '#f5d5de' : 'transparent',
-                }}
-                whileHover={{ backgroundColor: '#f5d5de', color: '#3d2b2b' }}
-                transition={{ duration: 0.2 }}
-              >
-                {label}
-              </motion.a>
-            )
-          })}
-        </div>
-
-        <div className="md:hidden flex items-center justify-between w-full gap-3">
-          <p className="text-[11px] font-semibold tracking-[4px] uppercase text-petal">
-            Sections
-          </p>
-          <motion.button
-            onClick={() => setMenuOpen((prev) => !prev)}
-            className="text-[12px] font-medium tracking-[1px] uppercase px-4 py-2 rounded-full border border-petal/40 text-ink-mid flex items-center gap-2"
-            whileTap={{ scale: 0.95 }}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-nav"
+    <>
+      {/* ── Desktop sidebar ─────────────────────────────────── */}
+      <motion.aside
+        className="hidden md:flex flex-col fixed left-0 top-0 h-screen z-50"
+        animate={{ width: sidebarWidth }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        style={{
+          background: 'rgba(254,250,248,0.97)',
+          backdropFilter: 'blur(24px)',
+          borderRight: '1px solid rgba(232,160,180,0.18)',
+          boxShadow: '2px 0 24px rgba(200,160,170,0.07)',
+          overflow: 'hidden',
+        }}
+      >
+        {/* Logo + collapse toggle */}
+        <div className={`flex items-center border-b border-[rgba(232,160,180,0.12)] ${collapsed ? 'justify-center px-2 py-5' : 'justify-between px-5 pt-6 pb-5'}`}>
+          {!collapsed && (
+            <div>
+              <p className="font-playfair text-[20px] text-ink-dark leading-tight whitespace-nowrap">Glow-Up</p>
+              <p className="font-cormorant text-[11px] tracking-[4px] text-petal-deep uppercase mt-0.5 whitespace-nowrap">Life Planner</p>
+            </div>
+          )}
+          <button
+            onClick={onToggle}
+            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-petal-pale transition-colors text-ink-soft hover:text-ink-dark shrink-0"
+            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           >
-            {menuOpen ? 'Close' : 'Menu'}
-            <span className="text-petal-deep">{menuOpen ? '—' : '+'}</span>
-          </motion.button>
+            <motion.span
+              animate={{ rotate: collapsed ? 180 : 0 }}
+              transition={{ duration: 0.3 }}
+              className="text-[14px] block"
+            >
+              ‹
+            </motion.span>
+          </button>
         </div>
 
-        <div className="hidden md:flex">
-          <AuthButton />
+        <SidebarLinks active={active} onClickLink={handleClick} collapsed={collapsed} />
+
+        {/* Auth */}
+        <div className={`border-t border-[rgba(232,160,180,0.12)] ${collapsed ? 'px-2 py-4 flex justify-center' : 'px-4 py-5'}`}>
+          {!collapsed && <AuthButton />}
+          {collapsed && (
+            <div className="w-8 h-8 rounded-full bg-petal-pale border border-petal-light flex items-center justify-center">
+              <img src="/icons/sparkle.png" alt="" className="w-5 h-5 object-contain" />
+            </div>
+          )}
         </div>
+      </motion.aside>
+
+      {/* ── Mobile top bar ──────────────────────────────────── */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4 py-3.5"
+        style={{
+          background: 'rgba(254,250,248,0.97)',
+          backdropFilter: 'blur(20px)',
+          borderBottom: '1px solid rgba(232,160,180,0.15)',
+        }}
+      >
+        <div>
+          <span className="font-playfair text-[16px] text-ink-dark">Glow-Up </span>
+          <span className="font-cormorant italic text-petal-deep text-[16px]">Planner</span>
+        </div>
+        <button
+          onClick={() => setMobileOpen(o => !o)}
+          className="w-9 h-9 flex flex-col items-center justify-center gap-[5px]"
+          aria-label="Toggle menu"
+        >
+          <span className={`block w-5 h-0.5 bg-ink-mid rounded-full transition-all duration-300 origin-center ${mobileOpen ? 'rotate-45 translate-y-[7px]' : ''}`} />
+          <span className={`block w-5 h-0.5 bg-ink-mid rounded-full transition-all duration-300 ${mobileOpen ? 'opacity-0 scale-x-0' : ''}`} />
+          <span className={`block w-5 h-0.5 bg-ink-mid rounded-full transition-all duration-300 origin-center ${mobileOpen ? '-rotate-45 -translate-y-[7px]' : ''}`} />
+        </button>
       </div>
 
-      <motion.div
-        id="mobile-nav"
-        initial={false}
-        animate={{ opacity: menuOpen ? 1 : 0 }}
-        transition={{ duration: 0.25, ease: 'easeInOut' }}
-        className={`md:hidden overflow-hidden transition-[max-height] duration-300 ease-in-out ${menuOpen ? 'max-h-[700px] mt-3' : 'max-h-0'}`}
-        aria-hidden={!menuOpen}
-      >
-        <div className="flex flex-col gap-1.5 pt-3">
-          {links.map(({ href, label }) => {
-            const isActive = active === href.slice(1)
-            return (
-              <motion.a
-                key={`mobile-${href}`}
-                href={href}
-                onClick={(e) => handleClick(e, href)}
-                className="text-[12px] font-medium tracking-[1px] uppercase no-underline px-4 py-2 rounded-full transition-colors duration-300 text-center"
-                style={{
-                  color: isActive ? '#3d2b2b' : '#9c7e7e',
-                  background: isActive ? '#f5d5de' : '#fef8f5',
-                }}
-                whileHover={{ backgroundColor: '#f5d5de', color: '#3d2b2b' }}
-                transition={{ duration: 0.2 }}
-              >
-                {label}
-              </motion.a>
-            )
-          })}
-        </div>
-        <div className="pt-3 border-t border-[rgba(232,160,180,0.2)] mt-3">
-          <AuthButton />
-        </div>
-      </motion.div>
-    </nav>
+      {/* ── Mobile overlay ──────────────────────────────────── */}
+      <AnimatePresence>
+        {mobileOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="md:hidden fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+              onClick={() => setMobileOpen(false)}
+            />
+            <motion.aside
+              initial={{ x: -280 }} animate={{ x: 0 }} exit={{ x: -280 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
+              className="md:hidden fixed left-0 top-0 h-screen w-[280px] z-50 flex flex-col"
+              style={{
+                background: 'rgba(254,250,248,0.99)',
+                borderRight: '1px solid rgba(232,160,180,0.18)',
+                boxShadow: '4px 0 32px rgba(200,160,170,0.12)',
+              }}
+            >
+              <div className="px-5 pt-7 pb-5 border-b border-[rgba(232,160,180,0.12)]">
+                <p className="font-playfair text-[20px] text-ink-dark leading-tight">Glow-Up</p>
+                <p className="font-cormorant text-[11px] tracking-[4px] text-petal-deep uppercase mt-0.5">Life Planner</p>
+              </div>
+              <SidebarLinks active={active} onClickLink={handleClick} collapsed={false} />
+              <div className="px-4 py-5 border-t border-[rgba(232,160,180,0.12)]">
+                <AuthButton />
+              </div>
+            </motion.aside>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
