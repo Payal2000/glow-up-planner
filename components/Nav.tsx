@@ -1,18 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import type { MouseEvent } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import AuthButton from './AuthButton'
+import { useSection } from '@/context/SectionContext'
 
 const links = [
-  { href: '#timetable', label: 'Timetable',    iconSrc: '/icons/clock.png' },
-  { href: '#daily',     label: 'Daily Planner', iconSrc: '/icons/coffee.png' },
-  { href: '#weekly',    label: 'Job Tracker',   iconSrc: '/icons/books.png' },
-  { href: '#habits',    label: 'Habits',        iconSrc: '/icons/ribbon.png' },
-  { href: '#meals',     label: 'Meals',         iconSrc: '/icons/diet.png' },
-  { href: '#fitness',   label: 'Fitness',       iconSrc: '/icons/headphones.png', iconClass: 'w-full h-full scale-[1.7]' },
-]
+  { id: 'timetable', label: 'Timetable',    iconSrc: '/icons/clock.png' },
+  { id: 'daily',     label: 'Daily Planner', iconSrc: '/icons/coffee.png' },
+  { id: 'weekly',    label: 'Job Tracker',   iconSrc: '/icons/books.png' },
+  { id: 'habits',    label: 'Habits',        iconSrc: '/icons/ribbon.png' },
+  { id: 'meals',     label: 'Meals',         iconSrc: '/icons/diet.png' },
+  { id: 'fitness',   label: 'Fitness',       iconSrc: '/icons/headphones.png', iconClass: 'w-full h-full scale-[1.7]' },
+] as const
 
 interface NavProps {
   collapsed: boolean
@@ -25,21 +25,19 @@ function SidebarLinks({
   collapsed,
 }: {
   active: string
-  onClickLink: (e: MouseEvent<HTMLAnchorElement>, href: string) => void
+  onClickLink: (id: string) => void
   collapsed: boolean
-}
-) {
+}) {
   return (
     <nav className="flex-1 px-2 py-4 space-y-0.5 overflow-y-auto overflow-x-hidden">
-      {links.map(({ href, label, iconSrc, iconClass }) => {
-        const isActive = active === href.slice(1)
+      {links.map(({ id, label, iconSrc, iconClass }) => {
+        const isActive = active === id
         return (
-          <motion.a
-            key={href}
-            href={href}
-            onClick={e => onClickLink(e, href)}
+          <motion.button
+            key={id}
+            onClick={() => onClickLink(id)}
             title={collapsed ? label : undefined}
-            className={`flex items-center rounded-xl no-underline transition-colors duration-200 relative ${collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-3 py-2.5'}`}
+            className={`w-full flex items-center rounded-xl transition-colors duration-200 relative ${collapsed ? 'justify-center px-2 py-3' : 'gap-3 px-3 py-2.5'}`}
             style={{
               background: isActive ? 'linear-gradient(135deg, #fce8ef, #fce8ef)' : 'transparent',
               color: isActive ? '#3d2b2b' : '#9c7e7e',
@@ -54,7 +52,6 @@ function SidebarLinks({
                 transition={{ type: 'spring', stiffness: 400, damping: 35 }}
               />
             )}
-            {/* Fixed icon container — all icons same box, centred */}
             <div className="w-10 h-10 flex items-center justify-center shrink-0 relative z-10">
               <img src={iconSrc} alt="" className={`object-contain ${iconClass ?? 'w-full h-full'}`} />
             </div>
@@ -64,7 +61,7 @@ function SidebarLinks({
             {!collapsed && isActive && (
               <div className="ml-auto w-1.5 h-1.5 rounded-full bg-petal-deep relative z-10 shrink-0" />
             )}
-          </motion.a>
+          </motion.button>
         )
       })}
     </nav>
@@ -72,24 +69,11 @@ function SidebarLinks({
 }
 
 export default function Nav({ collapsed, onToggle }: NavProps) {
-  const [active, setActive] = useState('timetable')
+  const { activeSection, setActiveSection } = useSection()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  useEffect(() => {
-    const sectionIds = links.map(l => l.href.slice(1))
-    const observer = new IntersectionObserver(
-      entries => entries.forEach(e => { if (e.isIntersecting) setActive(e.target.id) }),
-      { rootMargin: '-40% 0px -55% 0px' }
-    )
-    sectionIds.forEach(id => { const el = document.getElementById(id); if (el) observer.observe(el) })
-    return () => observer.disconnect()
-  }, [])
-
-  const handleClick = (e: MouseEvent<HTMLAnchorElement>, href: string) => {
-    e.preventDefault()
-    const target = document.querySelector(href)
-    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    setActive(href.slice(1))
+  const handleClick = (id: string) => {
+    setActiveSection(id as Parameters<typeof setActiveSection>[0])
     setMobileOpen(false)
   }
 
@@ -133,7 +117,7 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
           </button>
         </div>
 
-        <SidebarLinks active={active} onClickLink={handleClick} collapsed={collapsed} />
+        <SidebarLinks active={activeSection} onClickLink={handleClick} collapsed={collapsed} />
 
         {/* Auth */}
         <div className={`border-t border-[rgba(232,160,180,0.12)] ${collapsed ? 'px-2 py-4 flex justify-center' : 'px-4 py-5'}`}>
@@ -194,7 +178,7 @@ export default function Nav({ collapsed, onToggle }: NavProps) {
                 <p className="font-playfair text-[20px] text-ink-dark leading-tight">Glow-Up</p>
                 <p className="font-cormorant text-[11px] tracking-[4px] text-petal-deep uppercase mt-0.5">Life Planner</p>
               </div>
-              <SidebarLinks active={active} onClickLink={handleClick} collapsed={false} />
+              <SidebarLinks active={activeSection} onClickLink={handleClick} collapsed={false} />
               <div className="px-4 py-5 border-t border-[rgba(232,160,180,0.12)]">
                 <AuthButton />
               </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import Nav from './Nav'
+import { SectionProvider } from '@/context/SectionContext'
 
 export default function SidebarLayout({ children }: { children: React.ReactNode }) {
   const [collapsed, setCollapsed] = useState(false)
@@ -17,15 +18,17 @@ export default function SidebarLayout({ children }: { children: React.ReactNode 
   }, [])
 
   return (
-    <div className="flex min-h-screen">
-      <Nav collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
-      <motion.main
-        className="flex-1 pt-[56px] md:pt-0 min-w-0"
-        animate={{ marginLeft: isDesktop ? (collapsed ? 72 : 280) : 0 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      >
-        {children}
-      </motion.main>
-    </div>
+    <SectionProvider>
+      <div className="flex min-h-screen">
+        <Nav collapsed={collapsed} onToggle={() => setCollapsed(c => !c)} />
+        <motion.main
+          className="flex-1 pt-[56px] md:pt-0 min-w-0"
+          animate={{ marginLeft: isDesktop ? (collapsed ? 72 : 280) : 0 }}
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
+          {children}
+        </motion.main>
+      </div>
+    </SectionProvider>
   )
 }
