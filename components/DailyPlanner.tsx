@@ -45,7 +45,7 @@ const fmtDate = (d: Date) => d.toLocaleDateString('en-US', { weekday: 'long', mo
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="text-[11px] font-semibold tracking-[3px] uppercase text-petal mb-3 mt-6 first:mt-0">
+    <p className="text-[11px] font-semibold tracking-[3px] uppercase text-petal mb-2 mt-4 first:mt-0">
       {children}
     </p>
   )
@@ -99,7 +99,7 @@ function TextInput({
 }
 
 function Textarea({
-  value, onChange, placeholder, minHeight = 60,
+  value, onChange, placeholder, minHeight = 38,
 }: {
   value: string; onChange: (v: string) => void; placeholder: string; minHeight?: number;
 }) {
@@ -109,7 +109,7 @@ function Textarea({
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       style={{ minHeight }}
-      className="w-full border border-dashed border-petal-light rounded-lg p-3 font-dm text-[13px] text-ink-mid bg-warm-white resize-y outline-none focus:border-petal transition-colors placeholder:text-ink-faint"
+      className="w-full border border-dashed border-petal-light rounded-lg p-2.5 font-dm text-[13px] text-ink-mid bg-warm-white resize-y outline-none focus:border-petal transition-colors placeholder:text-ink-faint"
     />
   )
 }
@@ -190,6 +190,8 @@ export default function DailyPlanner() {
   const [data,     setData]     = useState<DayData>(defaultData())
   const [loading,  setLoading]  = useState(true)
   const [savedMsg, setSavedMsg] = useState(false)
+  const [showAllOutreach,     setShowAllOutreach]     = useState(false)
+  const [showAllApplications, setShowAllApplications] = useState(false)
   const saveTimer  = useRef<ReturnType<typeof setTimeout> | null>(null)
   const isFirstLoad = useRef(true)
   // Preserve non-planner fields (e.g. calendar notes) so saves don't wipe them
@@ -395,7 +397,7 @@ export default function DailyPlanner() {
               <p className="font-cormorant text-[15px] text-ink-soft" suppressHydrationWarning>{fmtDate(date)}</p>
             </div>
 
-            <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-start lg:justify-end">
+            <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto justify-start lg:justify-end min-w-0">
               {/* Date nav */}
               <motion.button
                 onClick={() => setDate(addDays(date, -1))}
@@ -541,7 +543,7 @@ export default function DailyPlanner() {
               className="grid grid-cols-1 md:grid-cols-2"
             >
               {/* ── Left column ── */}
-              <div className="p-4 sm:p-6 md:p-9 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
+              <div className="p-4 sm:p-5 border-b md:border-b-0 md:border-r" style={{ borderColor: 'rgba(200,160,170,0.1)' }}>
 
                 <SectionLabel>🌸 Morning Intention</SectionLabel>
                 <Textarea
@@ -561,7 +563,7 @@ export default function DailyPlanner() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-3 py-1.5 group"
+                        className="flex items-center gap-3 py-1 group"
                       >
                         <Checkbox
                           checked={item.done}
@@ -594,7 +596,7 @@ export default function DailyPlanner() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-3 py-1.5 group"
+                        className="flex items-center gap-3 py-1 group"
                       >
                         <Checkbox
                           checked={item.done}
@@ -621,12 +623,11 @@ export default function DailyPlanner() {
                   value={data.studyNotes}
                   onChange={(v) => update('studyNotes', v)}
                   placeholder="Topic studied, key takeaways..."
-                  minHeight={80}
                 />
               </div>
 
               {/* ── Right column ── */}
-              <div className="p-4 sm:p-6 md:p-9">
+              <div className="p-4 sm:p-5">
 
                 <SectionLabel>🔨 Build Log</SectionLabel>
                 <Textarea
@@ -638,7 +639,7 @@ export default function DailyPlanner() {
                 <SectionLabel>💌 Outreach Tracker</SectionLabel>
                 <AnimatePresence>
                   <ul className="list-none space-y-1">
-                    {data.outreach.map((item, i) => (
+                    {(showAllOutreach ? data.outreach : data.outreach.slice(0, 1)).map((item, i) => (
                       <motion.li
                         key={i}
                         layout
@@ -646,7 +647,7 @@ export default function DailyPlanner() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-3 py-1.5 group"
+                        className="flex items-center gap-3 py-1 group"
                       >
                         <Checkbox
                           checked={item.done}
@@ -666,12 +667,20 @@ export default function DailyPlanner() {
                     ))}
                   </ul>
                 </AnimatePresence>
+                {data.outreach.length > 1 && (
+                  <button
+                    onClick={() => setShowAllOutreach(v => !v)}
+                    className="text-[11px] text-petal-deep hover:text-petal-mid transition-colors mt-0.5 mb-1"
+                  >
+                    {showAllOutreach ? 'Show less' : `Show all (${data.outreach.length})`}
+                  </button>
+                )}
                 <AddRowButton onClick={() => addCheckItem('outreach')} label="Add contact" />
 
                 <SectionLabel>📋 Applications Sent</SectionLabel>
                 <AnimatePresence>
                   <ul className="list-none space-y-1">
-                    {data.applications.map((item, i) => (
+                    {(showAllApplications ? data.applications : data.applications.slice(0, 1)).map((item, i) => (
                       <motion.li
                         key={i}
                         layout
@@ -679,7 +688,7 @@ export default function DailyPlanner() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10, height: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="flex items-center gap-2 py-1.5 group"
+                        className="flex items-center gap-2 py-1 group"
                       >
                         <Checkbox
                           checked={item.done}
@@ -708,6 +717,14 @@ export default function DailyPlanner() {
                     ))}
                   </ul>
                 </AnimatePresence>
+                {data.applications.length > 1 && (
+                  <button
+                    onClick={() => setShowAllApplications(v => !v)}
+                    className="text-[11px] text-petal-deep hover:text-petal-mid transition-colors mt-0.5 mb-1"
+                  >
+                    {showAllApplications ? 'Show less' : `Show all (${data.applications.length})`}
+                  </button>
+                )}
                 <AddRowButton onClick={addApp} label="Add application" />
 
                 <SectionLabel>🌙 Evening Reflection</SectionLabel>

@@ -3,13 +3,15 @@
 @tailwind utilities;
 
 /* Custom scrollbar */
-::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: #fefaf8; }
 ::-webkit-scrollbar-thumb { background: #f5d5de; border-radius: 10px; }
 ::-webkit-scrollbar-thumb:hover { background: #e8a0b4; }
 
 /* Smooth scroll + base font scale */
-html { scroll-behavior: smooth; font-size: 20px; }
+html { scroll-behavior: smooth; font-size: 16px; }
+@media (min-width: 640px) { html { font-size: 18px; } }
+@media (min-width: 1024px) { html { font-size: 20px; } }
 
 /* Editable cells */
 .editable-cell {
