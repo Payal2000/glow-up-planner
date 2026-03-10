@@ -34,6 +34,8 @@ A personal productivity and wellness planner built for women doing a serious glo
 - AI **4-Week Habit Analysis** — identifies strengths, gaps, and concrete fixes
 - AI **Weekly Wrap-Up** — structured review auto-saved to Sunday's notes
 
+<img width="1580" height="882" alt="Screenshot 2026-03-09 at 8 04 51 PM" src="https://github.com/user-attachments/assets/790a9229-7810-473e-a4b7-7417d883d83f" />
+
 ### Meals
 - Food diary with columns: Meal, Food/Drink, Servings, Serving Size, Protein, Carbs, Sugar, Fat, Calories
 - Daily totals row with macro summary
@@ -45,7 +47,7 @@ A personal productivity and wellness planner built for women doing a serious glo
   - **Ask Anything** — nutrition Q&A with context from today's log
 - All coach results saved to `meal_coach_logs` and loaded on panel open
 
-<img width="1580" height="882" alt="Screenshot 2026-03-09 at 8 04 51 PM" src="https://github.com/user-attachments/assets/790a9229-7810-473e-a4b7-7417d883d83f" />
+
 
 
 ### Goals
